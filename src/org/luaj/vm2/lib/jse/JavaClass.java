@@ -26,14 +26,12 @@ import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
-
-import org.luaj.vm2.LuaError;
+import java.util.concurrent.ConcurrentHashMap;
 import org.luaj.vm2.LuaValue;
 
 /**
@@ -49,7 +47,7 @@ import org.luaj.vm2.LuaValue;
  */
 class JavaClass extends JavaInstance implements CoerceJavaToLua.Coercion {
 
-	static final Map classes = Collections.synchronizedMap(new HashMap());
+	private static final Map<Class<?>, JavaClass> classes = new ConcurrentHashMap<Class<?>, JavaClass>();
 
 	static final LuaValue NEW = valueOf("new");
 	

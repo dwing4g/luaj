@@ -23,10 +23,8 @@ package org.luaj.vm2.lib.jse;
 
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
-import java.util.Collections;
-import java.util.HashMap;
 import java.util.Map;
-
+import java.util.concurrent.ConcurrentHashMap;
 import org.luaj.vm2.LuaError;
 import org.luaj.vm2.LuaFunction;
 import org.luaj.vm2.LuaValue;
@@ -45,7 +43,7 @@ import org.luaj.vm2.Varargs;
  */
 class JavaMethod extends JavaMember {
 
-	static final Map methods = Collections.synchronizedMap(new HashMap());
+	private static final Map<Method, JavaMember> methods = new ConcurrentHashMap<Method, JavaMember>();
 	
 	static JavaMethod forMethod(Method m) {
 		JavaMethod j = (JavaMethod) methods.get(m);

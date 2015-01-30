@@ -22,18 +22,11 @@
 package org.luaj.vm2.lib.jse;
 
 import java.lang.reflect.Array;
-import java.lang.reflect.Constructor;
-import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
-import java.util.Collections;
-import java.util.HashMap;
 import java.util.Map;
-
-import org.luaj.vm2.LuaError;
+import java.util.concurrent.ConcurrentHashMap;
 import org.luaj.vm2.LuaString;
 import org.luaj.vm2.LuaTable;
 import org.luaj.vm2.LuaValue;
-import org.luaj.vm2.Varargs;
 
 /**
  * Helper class to coerce values from lua to Java within the luajava library. 
@@ -83,7 +76,7 @@ public class CoerceLuaToJava {
 		return getCoercion(clazz).coerce(value);
 	}
 	
-	static final Map COERCIONS = Collections.synchronizedMap(new HashMap());
+	private static final Map<Class<?>, Coercion> COERCIONS = new ConcurrentHashMap<Class<?>, Coercion>();
 	
 	static final class BoolCoercion implements Coercion {
 		public String toString() {
