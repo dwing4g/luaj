@@ -83,7 +83,6 @@ import org.luaj.vm2.lib.jse.JsePlatform;
  * {@link LE}, {@link TOSTRING}, and {@link CONCAT}.
  *
  * @see JsePlatform
- * @see JmePlatform
  * @see LoadState
  * @see Varargs
  */
@@ -152,7 +151,7 @@ public abstract class LuaValue extends Varargs
 	public static final LuaBoolean FALSE          = LuaBoolean._FALSE;
 
 	/** LuaValue constant corresponding to a {@link Varargs} list of no values */
-	public static final LuaValue   NONE           = None._NONE;
+	public static final LuaValue   NONE           = new None();
 
 	/** LuaValue number constant equal to 0 */
 	public static final LuaNumber  ZERO           = LuaInteger.valueOf(0);
@@ -224,12 +223,15 @@ public abstract class LuaValue extends Varargs
 	public static final LuaString  EMPTYSTRING    = valueOf("");
 
 	/** Limit on lua stack size */
-	private static int             MAXSTACK       = 250;
+	private static final int       MAXSTACK       = 250;
 
 	/** Array of {@link NIL} values to optimize filling stacks using System.arraycopy().
 	 * Must not be modified.
 	 */
 	public static final LuaValue[] NILS           = new LuaValue[MAXSTACK];
+
+	/** Constant limiting metatag loop processing */
+	private static final int       MAXTAGLOOP     = 100;
 
 	static
 	{
@@ -4005,9 +4007,6 @@ public abstract class LuaValue extends Varargs
 		return new LuaUserdata(o, metatable);
 	}
 
-	/** Constant limiting metatag loop processing */
-	private static final int MAXTAGLOOP = 100;
-
 	/**
 	 * Return value for field reference including metatag processing, or {@link LuaValue#NIL} if it doesn't exist.
 	 * @param t {@link LuaValue} on which field is being referenced, typically a table or something with the metatag {@link LuaValue#INDEX} defined
@@ -4304,8 +4303,6 @@ public abstract class LuaValue extends Varargs
 	 */
 	private static final class None extends LuaNil
 	{
-		static None _NONE = new None();
-
 		@Override
 		public LuaValue arg(int i)
 		{

@@ -21,8 +21,8 @@ import org.luaj.vm2.lib.MathLib;
  */
 public class LuaInteger extends LuaNumber
 {
-
 	private static final LuaInteger[] intValues = new LuaInteger[512];
+
 	static
 	{
 		for(int i = 0; i < 512; i++)

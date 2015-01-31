@@ -49,15 +49,15 @@ public class LuaString extends LuaValue
 	/** The number of bytes that comprise this string */
 	public final int                                               m_length;
 
-	private static final HashMap<Object, WeakReference<LuaString>> index_java = new HashMap<Object, WeakReference<LuaString>>();
+	private static final HashMap<String, WeakReference<LuaString>> index_java = new HashMap<String, WeakReference<LuaString>>();
 
-	private final static LuaString index_get(HashMap<Object, WeakReference<LuaString>> indextable, Object key)
+	private static final LuaString index_get(HashMap<String, WeakReference<LuaString>> indextable, String key)
 	{
 		WeakReference<LuaString> w = indextable.get(key);
 		return w != null ? (LuaString)w.get() : null;
 	}
 
-	private final static void index_set(HashMap<Object, WeakReference<LuaString>> indextable, Object key, LuaString value)
+	private static final void index_set(HashMap<String, WeakReference<LuaString>> indextable, String key, LuaString value)
 	{
 		indextable.put(key, new WeakReference<LuaString>(value));
 	}
@@ -680,11 +680,7 @@ public class LuaString extends LuaValue
 	@Override
 	public boolean equals(Object o)
 	{
-		if(o instanceof LuaString)
-		{
-			return raweq((LuaString)o);
-		}
-		return false;
+		return o instanceof LuaString && raweq((LuaString)o);
 	}
 
 	// equality w/ metatable processing

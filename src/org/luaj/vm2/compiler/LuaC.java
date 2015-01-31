@@ -2,7 +2,7 @@ package org.luaj.vm2.compiler;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.Hashtable;
+import java.util.HashMap;
 import org.luaj.vm2.LoadState;
 import org.luaj.vm2.LoadState.LuaCompiler;
 import org.luaj.vm2.LocVars;
@@ -37,12 +37,9 @@ import org.luaj.vm2.lib.jse.JsePlatform;
  * LoadState.load( new ByteArrayInputStream("print 'hello'".getBytes()), "main.lua", _G ).call();
  * } </pre>
  * @see LuaCompiler
- * @see LuaJC
  * @see JsePlatform
- * @see JmePlatform
  * @see BaseLib
  * @see LuaValue
- * @see LuaCompiler
  * @see Prototype
  */
 public class LuaC extends Lua implements LuaCompiler
@@ -55,7 +52,7 @@ public class LuaC extends Lua implements LuaCompiler
 	 */
 	public static void install()
 	{
-		org.luaj.vm2.LoadState.compiler = instance;
+		LoadState.compiler = instance;
 	}
 
 	protected static void _assert(boolean b)
@@ -67,20 +64,6 @@ public class LuaC extends Lua implements LuaCompiler
 	public static final int MAXSTACK         = 250;
 	static final int        LUAI_MAXUPVALUES = 60;
 	static final int        LUAI_MAXVARS     = 200;
-	static final int        NO_REG           = MAXARG_A;
-
-	/* OpMode - basic instruction format */
-	static final int
-	                        iABC             = 0,
-	                                         iABx = 1,
-	                                         iAsBx = 2;
-
-	/* OpArgMask */
-	static final int
-	                        OpArgN           = 0, /* argument is not used */
-	                                         OpArgU = 1, /* argument is used */
-	                                         OpArgR = 2, /* argument is a register or a jump offset */
-	                                         OpArgK = 3; /* argument is a constant or register/constant */
 
 	static void SET_OPCODE(InstructionPtr i, int o)
 	{
@@ -177,14 +160,14 @@ public class LuaC extends Lua implements LuaCompiler
 		return a;
 	}
 
-	public int nCcalls;
-	Hashtable  strings;
+	public int                    nCcalls;
+	HashMap<LuaString, LuaString> strings;
 
 	protected LuaC()
 	{
 	}
 
-	private LuaC(Hashtable strings)
+	private LuaC(HashMap<LuaString, LuaString> strings)
 	{
 		this.strings = strings;
 	}
@@ -193,17 +176,16 @@ public class LuaC extends Lua implements LuaCompiler
 	@Override
 	public LuaFunction load(InputStream stream, String name, LuaValue env) throws IOException
 	{
-		Prototype p = compile(stream, name);
-		return new LuaClosure(p, env);
+		return new LuaClosure(compile(stream, name), env);
 	}
 
 	/** Compile a prototype or load as a binary chunk */
 	public static Prototype compile(InputStream stream, String name) throws IOException
 	{
 		int firstByte = stream.read();
-		return (firstByte == '\033') ?
+		return firstByte == '\033' ?
 		        LoadState.loadBinaryChunk(firstByte, stream, name) :
-		        (new LuaC(new Hashtable())).luaY_parser(firstByte, stream, name);
+		        new LuaC(new HashMap<LuaString, LuaString>()).luaY_parser(firstByte, stream, name);
 	}
 
 	/** Parse the input */
@@ -215,23 +197,23 @@ public class LuaC extends Lua implements LuaCompiler
 		lexstate.setinput(this, firstByte, z, LuaValue.valueOf(name));
 		lexstate.open_func(funcstate);
 		/* main func. is always vararg */
-		funcstate.f.is_vararg = LuaC.VARARG_ISVARARG;
-		funcstate.f.source = LuaValue.valueOf(name);
+		funcstate._f.is_vararg = Lua.VARARG_ISVARARG;
+		funcstate._f.source = LuaValue.valueOf(name);
 		lexstate.next(); /* read first token */
 		lexstate.chunk();
 		lexstate.check(LexState.TK_EOS);
 		lexstate.close_func();
 		LuaC._assert(funcstate.prev == null);
-		LuaC._assert(funcstate.f.nups == 0);
-		LuaC._assert(lexstate.fs == null);
-		return funcstate.f;
+		LuaC._assert(funcstate._f.nups == 0);
+		LuaC._assert(lexstate._fs == null);
+		return funcstate._f;
 	}
 
 	// look up and keep at most one copy of each string
 	public LuaString newTString(byte[] bytes, int offset, int len)
 	{
 		LuaString tmp = LuaString.valueOf(bytes, offset, len);
-		LuaString v = (LuaString)strings.get(tmp);
+		LuaString v = strings.get(tmp);
 		if(v == null)
 		{
 			// must copy bytes, since bytes could be from reusable buffer
@@ -248,7 +230,7 @@ public class LuaC extends Lua implements LuaCompiler
 		return string;
 	}
 
-	public static LuaFunction load(Prototype p, String filename, LuaValue env)
+	public static LuaFunction load(Prototype p, LuaValue env)
 	{
 		return new LuaClosure(p, env);
 	}

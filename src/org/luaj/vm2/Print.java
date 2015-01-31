@@ -11,52 +11,50 @@ import java.io.PrintStream;
 public class Print extends Lua
 {
 	/** opcode names */
-	private static final String  STRING_FOR_NULL = "null";
-	public static PrintStream    ps              = System.out;
+	private static final String   STRING_FOR_NULL = "null";
 
-	public static final String[] OPNAMES         = {
-	                                             "MOVE",
-	                                             "LOADK",
-	                                             "LOADBOOL",
-	                                             "LOADNIL",
-	                                             "GETUPVAL",
-	                                             "GETGLOBAL",
-	                                             "GETTABLE",
-	                                             "SETGLOBAL",
-	                                             "SETUPVAL",
-	                                             "SETTABLE",
-	                                             "NEWTABLE",
-	                                             "SELF",
-	                                             "ADD",
-	                                             "SUB",
-	                                             "MUL",
-	                                             "DIV",
-	                                             "MOD",
-	                                             "POW",
-	                                             "UNM",
-	                                             "NOT",
-	                                             "LEN",
-	                                             "CONCAT",
-	                                             "JMP",
-	                                             "EQ",
-	                                             "LT",
-	                                             "LE",
-	                                             "TEST",
-	                                             "TESTSET",
-	                                             "CALL",
-	                                             "TAILCALL",
-	                                             "RETURN",
-	                                             "FORLOOP",
-	                                             "FORPREP",
-	                                             "TFORLOOP",
-	                                             "SETLIST",
-	                                             "CLOSE",
-	                                             "CLOSURE",
-	                                             "VARARG",
-	                                             null,
-	                                             };
+	private static final String[] OPNAMES         = {
+	                                              "MOVE",
+	                                              "LOADK",
+	                                              "LOADBOOL",
+	                                              "LOADNIL",
+	                                              "GETUPVAL",
+	                                              "GETGLOBAL",
+	                                              "GETTABLE",
+	                                              "SETGLOBAL",
+	                                              "SETUPVAL",
+	                                              "SETTABLE",
+	                                              "NEWTABLE",
+	                                              "SELF",
+	                                              "ADD",
+	                                              "SUB",
+	                                              "MUL",
+	                                              "DIV",
+	                                              "MOD",
+	                                              "POW",
+	                                              "UNM",
+	                                              "NOT",
+	                                              "LEN",
+	                                              "CONCAT",
+	                                              "JMP",
+	                                              "EQ",
+	                                              "LT",
+	                                              "LE",
+	                                              "TEST",
+	                                              "TESTSET",
+	                                              "CALL",
+	                                              "TAILCALL",
+	                                              "RETURN",
+	                                              "FORLOOP",
+	                                              "FORPREP",
+	                                              "TFORLOOP",
+	                                              "SETLIST",
+	                                              "CLOSE",
+	                                              "CLOSURE",
+	                                              "VARARG",
+	                                              };
 
-	static void printString(LuaString s)
+	static void printString(PrintStream ps, LuaString s)
 	{
 		ps.print('"');
 		for(int i = 0, n = s.m_length; i < n; i++)
@@ -105,12 +103,12 @@ public class Print extends Lua
 		ps.print('"');
 	}
 
-	static void printValue(LuaValue v)
+	static void printValue(PrintStream ps, LuaValue v)
 	{
 		switch(v.type())
 		{
 			case LuaValue.TSTRING:
-				printString((LuaString)v);
+				printString(ps, (LuaString)v);
 				break;
 			default:
 				ps.print(v.tojstring());
@@ -118,22 +116,22 @@ public class Print extends Lua
 		}
 	}
 
-	static void printConstant(Prototype f, int i)
+	static void printConstant(PrintStream ps, Prototype f, int i)
 	{
-		printValue(f.k[i]);
+		printValue(ps, f.k[i]);
 	}
 
 	/**
 	 * Print the code in a prototype
 	 * @param f the {@link Prototype}
 	 */
-	public static void printCode(Prototype f)
+	public static void printCode(PrintStream ps, Prototype f)
 	{
 		int[] code = f.code;
 		int pc, n = code.length;
 		for(pc = 0; pc < n; pc++)
 		{
-			printOpCode(f, pc);
+			printOpCode(ps, f, pc);
 			ps.println();
 		}
 	}
@@ -144,7 +142,7 @@ public class Print extends Lua
 	 * @param f the {@link Prototype}
 	 * @param pc the program counter to look up and print
 	 */
-	public static void printOpCode(Prototype f, int pc)
+	public static void printOpCode(PrintStream ps, Prototype f, int pc)
 	{
 		int[] code = f.code;
 		int i = code[pc];
@@ -191,27 +189,27 @@ public class Print extends Lua
 		{
 			case OP_LOADK:
 				ps.print("  ; ");
-				printConstant(f, bx);
+				printConstant(ps, f, bx);
 				break;
 			case OP_GETUPVAL:
 			case OP_SETUPVAL:
 				ps.print("  ; ");
 				if(f.upvalues.length > b)
-					printValue(f.upvalues[b]);
+					printValue(ps, f.upvalues[b]);
 				else
 					ps.print("-");
 				break;
 			case OP_GETGLOBAL:
 			case OP_SETGLOBAL:
 				ps.print("  ; ");
-				printConstant(f, bx);
+				printConstant(ps, f, bx);
 				break;
 			case OP_GETTABLE:
 			case OP_SELF:
 				if(ISK(c))
 				{
 					ps.print("  ; ");
-					printConstant(f, INDEXK(c));
+					printConstant(ps, f, INDEXK(c));
 				}
 				break;
 			case OP_SETTABLE:
@@ -227,12 +225,12 @@ public class Print extends Lua
 				{
 					ps.print("  ; ");
 					if(ISK(b))
-						printConstant(f, INDEXK(b));
+						printConstant(ps, f, INDEXK(b));
 					else
 						ps.print("-");
 					ps.print(" ");
 					if(ISK(c))
-						printConstant(f, INDEXK(c));
+						printConstant(ps, f, INDEXK(c));
 					else
 						ps.print("-");
 				}
@@ -264,7 +262,7 @@ public class Print extends Lua
 		return pc > 0 && f.lineinfo != null && pc < f.lineinfo.length ? f.lineinfo[pc] : -1;
 	}
 
-	static void printHeader(Prototype f)
+	static void printHeader(PrintStream ps, Prototype f)
 	{
 		String s = String.valueOf(f.source);
 		if(s.startsWith("@") || s.startsWith("="))
@@ -283,19 +281,19 @@ public class Print extends Lua
 		        + " constant, " + f.p.length + " function\n");
 	}
 
-	static void printConstants(Prototype f)
+	static void printConstants(PrintStream ps, Prototype f)
 	{
 		int i, n = f.k.length;
 		ps.print("constants (" + n + ") for " + id() + ":\n");
 		for(i = 0; i < n; i++)
 		{
 			ps.print("  " + (i + 1) + "  ");
-			printValue(f.k[i]);
+			printValue(ps, f.k[i]);
 			ps.print("\n");
 		}
 	}
 
-	static void printLocals(Prototype f)
+	static void printLocals(PrintStream ps, Prototype f)
 	{
 		int i, n = f.locvars.length;
 		ps.print("locals (" + n + ") for " + id() + ":\n");
@@ -305,7 +303,7 @@ public class Print extends Lua
 		}
 	}
 
-	static void printUpValues(Prototype f)
+	static void printUpValues(PrintStream ps, Prototype f)
 	{
 		int i, n = f.upvalues.length;
 		ps.print("upvalues (" + n + ") for " + id() + ":\n");
@@ -315,27 +313,27 @@ public class Print extends Lua
 		}
 	}
 
-	public static void print(Prototype p)
+	public static void print(PrintStream ps, Prototype p)
 	{
-		printFunction(p, true);
+		printFunction(ps, p, true);
 	}
 
-	public static void printFunction(Prototype f, boolean full)
+	public static void printFunction(PrintStream ps, Prototype f, boolean full)
 	{
 		int i, n = f.p.length;
-		printHeader(f);
-		printCode(f);
+		printHeader(ps, f);
+		printCode(ps, f);
 		if(full)
 		{
-			printConstants(f);
-			printLocals(f);
-			printUpValues(f);
+			printConstants(ps, f);
+			printLocals(ps, f);
+			printUpValues(ps, f);
 		}
 		for(i = 0; i < n; i++)
-			printFunction(f.p[i], full);
+			printFunction(ps, f.p[i], full);
 	}
 
-	private static void format(String s, int maxcols)
+	private static void format(PrintStream ps, String s, int maxcols)
 	{
 		int n = s.length();
 		if(n > maxcols)
@@ -364,14 +362,13 @@ public class Print extends Lua
 	public static void printState(LuaClosure cl, int pc, LuaValue[] stack, int top, Varargs varargs)
 	{
 		// print opcode into buffer
-		PrintStream previous = ps;
 		ByteArrayOutputStream baos = new ByteArrayOutputStream();
-		ps = new PrintStream(baos);
-		printOpCode(cl.p, pc);
+		PrintStream ps = new PrintStream(baos);
+		printOpCode(ps, cl.p, pc);
 		ps.flush();
 		ps.close();
-		ps = previous;
-		format(baos.toString(), 50);
+		ps = System.out;
+		format(ps, baos.toString(), 50);
 
 		// print stack
 		ps.print('[');

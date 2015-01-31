@@ -67,7 +67,7 @@ import org.luaj.vm2.lib.DebugLib;
  */
 public class LuaClosure extends LuaFunction
 {
-	private static final UpValue[] NOUPVALUES = new UpValue[0];
+	private static final UpValue[] NOUPVALUES = {};
 
 	public final Prototype         p;
 	public final UpValue[]         upValues;

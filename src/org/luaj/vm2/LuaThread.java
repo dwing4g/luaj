@@ -22,6 +22,7 @@
 package org.luaj.vm2;
 
 import java.lang.ref.WeakReference;
+import java.util.concurrent.atomic.AtomicLong;
 import org.luaj.vm2.lib.BaseLib;
 import org.luaj.vm2.lib.CoroutineLib;
 import org.luaj.vm2.lib.DebugLib;
@@ -57,52 +58,48 @@ import org.luaj.vm2.lib.jse.JsePlatform;
  *
  * @see LuaValue
  * @see JsePlatform
- * @see JmePlatform
  * @see CoroutineLib
  */
 public class LuaThread extends LuaValue
 {
-	public static LuaValue         s_metatable;
+	public static LuaValue          s_metatable;
 
-	public static int              coroutine_count              = 0;
+	private static final AtomicLong coroutine_count              = new AtomicLong();
 
 	/** Interval at which to check for lua threads that are no longer referenced.
 	 * This can be changed by Java startup code if desired.
 	 */
-	static long                    thread_orphan_check_interval = 30000;
+	private static final long       thread_orphan_check_interval = 30000;
 
-	private static final int       STATUS_INITIAL               = 0;
-	private static final int       STATUS_SUSPENDED             = 1;
-	private static final int       STATUS_RUNNING               = 2;
-	private static final int       STATUS_NORMAL                = 3;
-	private static final int       STATUS_DEAD                  = 4;
-	private static final String[]  STATUS_NAMES                 = {
-	                                                            "suspended",
-	                                                            "suspended",
-	                                                            "running",
-	                                                            "normal",
-	                                                            "dead", };
+	private static final int        STATUS_INITIAL               = 0;
+	private static final int        STATUS_SUSPENDED             = 1;
+	private static final int        STATUS_RUNNING               = 2;
+	private static final int        STATUS_NORMAL                = 3;
+	private static final int        STATUS_DEAD                  = 4;
+	private static final String[]   STATUS_NAMES                 = {
+	                                                             "suspended",
+	                                                             "suspended",
+	                                                             "running",
+	                                                             "normal",
+	                                                             "dead", };
 
-	private LuaValue               env;
-	private final State            state;
+	private LuaValue                env;
+	private final State             state;
 
 	/** Field to hold state of error condition during debug hook function calls. */
-	public LuaValue                err;
+	public LuaValue                 err;
 
-	final CallStack                callstack                    = new CallStack();
+	final CallStack                 callstack                    = new CallStack();
 
-	public static final int        MAX_CALLSTACK                = 256;
+	public static final int         MAX_CALLSTACK                = 256;
 
-	private static final LuaThread main_thread                  = new LuaThread();
+	private static final LuaThread  main_thread                  = new LuaThread();
 
 	// state of running thread including call stack
-	private static LuaThread       running_thread               = main_thread;
-
-	/** Interval to check for LuaThread dereferencing.  */
-	public static int              GC_INTERVAL                  = 30000;
+	private static LuaThread        running_thread               = main_thread;
 
 	/** Thread-local used by DebugLib to store debugging state.  */
-	public Object                  debugState;
+	public Object                   debugState;
 
 	/** Private constructor for main thread only */
 	private LuaThread()
@@ -320,7 +317,7 @@ public class LuaThread extends LuaValue
 				if(status == STATUS_INITIAL)
 				{
 					status = STATUS_RUNNING;
-					new Thread(this, "Coroutine-" + (++coroutine_count)).start();
+					new Thread(this, "Coroutine-" + coroutine_count.incrementAndGet()).start();
 				}
 				else
 				{

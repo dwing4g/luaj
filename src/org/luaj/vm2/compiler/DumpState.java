@@ -26,7 +26,7 @@ public class DumpState
 	private static final byte[] LUAC_HEADER_SIGNATURE           = { '\033', 'L', 'u', 'a' };
 
 	/** set true to allow integer compilation */
-	public static boolean       ALLOW_INTEGER_CASTING           = false;
+	public static final boolean ALLOW_INTEGER_CASTING           = false;
 
 	/** format corresponding to non-number-patched lua, all numbers are floats or doubles */
 	public static final int     NUMBER_FORMAT_FLOATS_OR_DOUBLES = 0;

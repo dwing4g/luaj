@@ -4,10 +4,12 @@ import org.luaj.vm2.LuaTable;
 import org.luaj.vm2.LuaThread;
 import org.luaj.vm2.LuaValue;
 import org.luaj.vm2.compiler.LuaC;
+import org.luaj.vm2.lib.BaseLib;
 import org.luaj.vm2.lib.CoroutineLib;
 import org.luaj.vm2.lib.DebugLib;
+import org.luaj.vm2.lib.MathLib;
+import org.luaj.vm2.lib.OsLib;
 import org.luaj.vm2.lib.PackageLib;
-import org.luaj.vm2.lib.ResourceFinder;
 import org.luaj.vm2.lib.StringLib;
 import org.luaj.vm2.lib.TableLib;
 
@@ -33,11 +35,11 @@ import org.luaj.vm2.lib.TableLib;
  * _G.get("require").call(LuaValue.valueOf("main"));
  * } </pre>
  * For this to succeed, the file "main.lua" must be in the current directory or a resource.
- * See {@link JseBaseLib} for details on finding scripts using {@link ResourceFinder}.
+ * See {@link BaseLib} for details on finding scripts.
  * <p>
  * The standard globals will contain all standard libraries plus {@code luajava}:
  * <ul>
- * <li>{@link JseBaseLib}</li>
+ * <li>{@link BaseLib}</li>
  * <li>{@link PackageLib}</li>
  * <li>{@link TableLib}</li>
  * <li>{@link StringLib}</li>
@@ -66,14 +68,14 @@ public class JsePlatform
 	public static LuaTable standardGlobals()
 	{
 		LuaTable _G = new LuaTable();
-		_G.load(new JseBaseLib());
+		_G.load(new BaseLib());
 		_G.load(new PackageLib());
 		_G.load(new TableLib());
 		_G.load(new StringLib());
 		_G.load(new CoroutineLib());
-		_G.load(new JseMathLib());
+		_G.load(new MathLib());
 		_G.load(new JseIoLib());
-		_G.load(new JseOsLib());
+		_G.load(new OsLib());
 		_G.load(new LuajavaLib());
 		LuaThread.setGlobals(_G);
 		LuaC.install();

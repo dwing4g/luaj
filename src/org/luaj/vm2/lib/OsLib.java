@@ -1,32 +1,11 @@
-/*******************************************************************************
-* Copyright (c) 2009 Luaj.org. All rights reserved.
-*
-* Permission is hereby granted, free of charge, to any person obtaining a copy
-* of this software and associated documentation files (the "Software"), to deal
-* in the Software without restriction, including without limitation the rights
-* to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-* copies of the Software, and to permit persons to whom the Software is
-* furnished to do so, subject to the following conditions:
-*
-* The above copyright notice and this permission notice shall be included in
-* all copies or substantial portions of the Software.
-*
-* THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-* IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-* FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-* AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-* LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-* OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
-* THE SOFTWARE.
-******************************************************************************/
 package org.luaj.vm2.lib;
 
+import java.io.File;
 import java.io.IOException;
 import java.util.concurrent.atomic.AtomicLong;
 import org.luaj.vm2.LuaTable;
 import org.luaj.vm2.LuaValue;
 import org.luaj.vm2.Varargs;
-import org.luaj.vm2.lib.jse.JseOsLib;
 import org.luaj.vm2.lib.jse.JsePlatform;
 
 /**
@@ -68,53 +47,63 @@ import org.luaj.vm2.lib.jse.JsePlatform;
  * Doing so will ensure the library is properly initialized
  * and loaded into the globals table.
  * <p>
-  * @see LibFunction
- * @see JseOsLib
+ * @see LibFunction
  * @see JsePlatform
- * @see JmePlatform
  * @see <a href="http://www.lua.org/manual/5.1/manual.html#5.8">http://www.lua.org/manual/5.1/manual.html#5.8</a>
  */
-public class OsLib extends VarArgFunction {
-	public static String TMP_PREFIX    = ".luaj";
-	public static String TMP_SUFFIX    = "tmp";
+public class OsLib extends VarArgFunction
+{
+	public static String          TMP_PREFIX       = ".luaj";
+	public static String          TMP_SUFFIX       = "tmp";
 
-	private static final int INIT      = 0;
-	private static final int CLOCK     = 1;
-	private static final int DATE      = 2;
-	private static final int DIFFTIME  = 3;
-	private static final int EXECUTE   = 4;
-	private static final int EXIT      = 5;
-	private static final int GETENV    = 6;
-	private static final int REMOVE    = 7;
-	private static final int RENAME    = 8;
-	private static final int SETLOCALE = 9;
-	private static final int TIME      = 10;
-	private static final int TMPNAME   = 11;
+	private static final int      INIT             = 0;
+	private static final int      CLOCK            = 1;
+	private static final int      DATE             = 2;
+	private static final int      DIFFTIME         = 3;
+	private static final int      EXECUTE          = 4;
+	private static final int      EXIT             = 5;
+	private static final int      GETENV           = 6;
+	private static final int      REMOVE           = 7;
+	private static final int      RENAME           = 8;
+	private static final int      SETLOCALE        = 9;
+	private static final int      TIME             = 10;
+	private static final int      TMPNAME          = 11;
 
-	private static final String[] NAMES = {
-		"clock",
-		"date",
-		"difftime",
-		"execute",
-		"exit",
-		"getenv",
-		"remove",
-		"rename",
-		"setlocale",
-		"time",
-		"tmpname",
-	};
+	private static final String[] NAMES            = {
+	                                               "clock",
+	                                               "date",
+	                                               "difftime",
+	                                               "execute",
+	                                               "exit",
+	                                               "getenv",
+	                                               "remove",
+	                                               "rename",
+	                                               "setlocale",
+	                                               "time",
+	                                               "tmpname",
+	                                               };
 
-	private static final long t0 = System.currentTimeMillis();
-	private static AtomicLong tmpnames = new AtomicLong(t0);
+	private static final long     t0               = System.currentTimeMillis();
+	private static AtomicLong     tmpnames         = new AtomicLong(t0);
+
+	/** return code indicating the execute() threw an I/O exception */
+	public static int             EXEC_IOEXCEPTION = 1;
+
+	/** return code indicating the execute() was interrupted */
+	public static int             EXEC_INTERRUPTED = -2;
+
+	/** return code indicating the execute() threw an unknown exception */
+	public static int             EXEC_ERROR       = -3;
 
 	/**
 	 * Create and OsLib instance.
 	 */
-	public OsLib() {
+	public OsLib()
+	{
 	}
 
-	public LuaValue init() {
+	public LuaValue init()
+	{
 		LuaTable t = new LuaTable();
 		bind(t, this.getClass(), NAMES, CLOCK);
 		env.set("os", t);
@@ -122,46 +111,55 @@ public class OsLib extends VarArgFunction {
 		return t;
 	}
 
-	public Varargs invoke(Varargs args) {
-		try {
-			switch ( opcode ) {
-			case INIT:
-				return init();
-			case CLOCK:
-				return valueOf(clock());
-			case DATE: {
-				String s = args.optjstring(1, null);
-				double t = args.optdouble(2,-1);
-				return valueOf( date(s, t==-1? System.currentTimeMillis()/1000.: t) );
-			}
-			case DIFFTIME:
-				return valueOf(difftime(args.checkdouble(1),args.checkdouble(2)));
-			case EXECUTE:
-				return valueOf(execute(args.optjstring(1, null)));
-			case EXIT:
-				exit(args.optint(1, 0));
-				return NONE;
-			case GETENV: {
-				final String val = getenv(args.checkjstring(1));
-				return val!=null? valueOf(val): NIL;
-			}
-			case REMOVE:
-				remove(args.checkjstring(1));
-				return LuaValue.TRUE;
-			case RENAME:
-				rename(args.checkjstring(1), args.checkjstring(2));
-				return LuaValue.TRUE;
-			case SETLOCALE: {
-				String s = setlocale(args.optjstring(1,null), args.optjstring(2, "all"));
-				return s!=null? valueOf(s): NIL;
-			}
-			case TIME:
-				return valueOf(time(args.arg1().isnil()? null: args.checktable(1)));
-			case TMPNAME:
-				return valueOf(tmpname());
+	@Override
+	public Varargs invoke(Varargs args)
+	{
+		try
+		{
+			switch(_opcode)
+			{
+				case INIT:
+					return init();
+				case CLOCK:
+					return valueOf(clock());
+				case DATE:
+				{
+					String s = args.optjstring(1, null);
+					double t = args.optdouble(2, -1);
+					return valueOf(date(s, t == -1 ? System.currentTimeMillis() / 1000. : t));
+				}
+				case DIFFTIME:
+					return valueOf(difftime(args.checkdouble(1), args.checkdouble(2)));
+				case EXECUTE:
+					return valueOf(execute(args.optjstring(1, null)));
+				case EXIT:
+					exit(args.optint(1, 0));
+					return NONE;
+				case GETENV:
+				{
+					final String val = getenv(args.checkjstring(1));
+					return val != null ? valueOf(val) : NIL;
+				}
+				case REMOVE:
+					remove(args.checkjstring(1));
+					return LuaValue.TRUE;
+				case RENAME:
+					rename(args.checkjstring(1), args.checkjstring(2));
+					return LuaValue.TRUE;
+				case SETLOCALE:
+				{
+					String s = setlocale(args.optjstring(1, null), args.optjstring(2, "all"));
+					return s != null ? valueOf(s) : NIL;
+				}
+				case TIME:
+					return valueOf(time(args.arg1().isnil() ? null : args.checktable(1)));
+				case TMPNAME:
+					return valueOf(tmpname());
 			}
 			return NONE;
-		} catch ( IOException e ) {
+		}
+		catch(IOException e)
+		{
 			return varargsOf(NIL, valueOf(e.getMessage()));
 		}
 	}
@@ -170,8 +168,9 @@ public class OsLib extends VarArgFunction {
 	 * @return an approximation of the amount in seconds of CPU time used by
 	 * the program.
 	 */
-	protected double clock() {
-		return (System.currentTimeMillis()-t0) / 1000.;
+	protected static double clock()
+	{
+		return (System.currentTimeMillis() - t0) / 1000.;
 	}
 
 	/**
@@ -181,7 +180,8 @@ public class OsLib extends VarArgFunction {
 	 * @param t1
 	 * @return diffeence in time values, in seconds
 	 */
-	protected double difftime(double t2, double t1) {
+	protected static double difftime(double t2, double t1)
+	{
 		return t2 - t1;
 	}
 
@@ -209,8 +209,9 @@ public class OsLib extends VarArgFunction {
 	 * @return a LString or a LTable containing date and time,
 	 * formatted according to the given string format.
 	 */
-	protected String date(String format, double time) {
-		return new java.util.Date((long)(time*1000)).toString();
+	protected static String date(String format, double time)
+	{
+		return new java.util.Date((long)(time * 1000)).toString();
 	}
 
 	/**
@@ -221,15 +222,42 @@ public class OsLib extends VarArgFunction {
 	 * is available and zero otherwise.
 	 * @param command command to pass to the system
 	 */
-	protected int execute(String command) {
-		return 0;
+	protected static int execute(String command)
+	{
+		Runtime r = Runtime.getRuntime();
+		try
+		{
+			final Process p = r.exec(command);
+			try
+			{
+				p.waitFor();
+				return p.exitValue();
+			}
+			finally
+			{
+				p.destroy();
+			}
+		}
+		catch(IOException ioe)
+		{
+			return EXEC_IOEXCEPTION;
+		}
+		catch(InterruptedException e)
+		{
+			return EXEC_INTERRUPTED;
+		}
+		catch(Throwable t)
+		{
+			return EXEC_ERROR;
+		}
 	}
 
 	/**
 	 * Calls the C function exit, with an optional code, to terminate the host program.
 	 * @param code
 	 */
-	protected void exit(int code) {
+	protected static void exit(int code)
+	{
 		System.exit(code);
 	}
 
@@ -239,7 +267,8 @@ public class OsLib extends VarArgFunction {
 	 * @param varname
 	 * @return String value, or null if not defined
 	 */
-	protected String getenv(String varname) {
+	protected static String getenv(String varname)
+	{
 		return System.getProperty(varname);
 	}
 
@@ -251,8 +280,13 @@ public class OsLib extends VarArgFunction {
 	 * @param filename
 	 * @throws IOException if it fails
 	 */
-	protected void remove(String filename) throws IOException {
-		throw new IOException( "not implemented" );
+	protected static void remove(String filename) throws IOException
+	{
+		File f = new File(filename);
+		if(!f.exists())
+		    throw new IOException("No such file or directory");
+		if(!f.delete())
+		    throw new IOException("Failed to delete");
 	}
 
 	/**
@@ -263,8 +297,13 @@ public class OsLib extends VarArgFunction {
 	 * @param newname new file name
 	 * @throws IOException if it fails
 	 */
-	protected void rename(String oldname, String newname) throws IOException {
-		throw new IOException( "not implemented" );
+	protected static void rename(String oldname, String newname) throws IOException
+	{
+		File f = new File(oldname);
+		if(!f.exists())
+		    throw new IOException("No such file or directory");
+		if(!f.renameTo(new File(newname)))
+		    throw new IOException("Failed to delete");
 	}
 
 	/**
@@ -285,7 +324,8 @@ public class OsLib extends VarArgFunction {
 	 * @return the name of the new locale, or null if the request
 	 * cannot be honored.
 	 */
-	protected String setlocale(String locale, String category) {
+	protected static String setlocale(String locale, String category)
+	{
 		return "C";
 	}
 
@@ -298,7 +338,8 @@ public class OsLib extends VarArgFunction {
 	 * @param table
 	 * @return long value for the time
 	 */
-	protected long time(LuaTable table) {
+	protected static long time(LuaTable table)
+	{
 		return System.currentTimeMillis();
 	}
 
@@ -315,7 +356,16 @@ public class OsLib extends VarArgFunction {
 	 *
 	 * @return String filename to use
 	 */
-	protected String tmpname() {
-		return TMP_PREFIX+tmpnames.getAndIncrement()+TMP_SUFFIX;
+	protected static String tmpname()
+	{
+		try
+		{
+			File f = File.createTempFile(TMP_PREFIX, TMP_SUFFIX);
+			return f.getName();
+		}
+		catch(IOException ioe)
+		{
+			return TMP_PREFIX + tmpnames.getAndIncrement() + TMP_SUFFIX;
+		}
 	}
 }

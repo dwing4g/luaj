@@ -42,11 +42,9 @@ import org.luaj.vm2.lib.jse.JsePlatform;
 * @see LoadState#compiler
 * @see LoadState#load(InputStream, String, LuaValue)
 * @see LuaC
-* @see LuaJC
 */
 public class LoadState
 {
-
 	/** format corresponding to non-number-patched lua, all numbers are floats or doubles */
 	public static final int NUMBER_FORMAT_FLOATS_OR_DOUBLES = 0;
 
@@ -109,9 +107,6 @@ public class LoadState
 	/** input stream from which we are loading */
 	public final DataInputStream     is;
 
-	/** Name of what is being loaded? */
-	String                           name;
-
 	private static final LuaValue[]  NOVALUES             = {};
 	private static final Prototype[] NOPROTOS             = {};
 	private static final LocVars[]   NOLOCVARS            = {};
@@ -124,7 +119,7 @@ public class LoadState
 	/** Load a 4-byte int value from the input stream
 	 * @return the int value laoded.
 	 **/
-	int loadInt() throws IOException
+	private int loadInt() throws IOException
 	{
 		is.readFully(buf, 0, 4);
 		return luacLittleEndian ?
@@ -135,7 +130,7 @@ public class LoadState
 	/** Load an array of int values from the input stream
 	 * @return the array of int values laoded.
 	 **/
-	int[] loadIntArray() throws IOException
+	private int[] loadIntArray() throws IOException
 	{
 		int n = loadInt();
 		if(n == 0)
@@ -158,7 +153,7 @@ public class LoadState
 	/** Load a long  value from the input stream
 	 * @return the long value laoded.
 	 **/
-	long loadInt64() throws IOException
+	private long loadInt64() throws IOException
 	{
 		int a, b;
 		if(this.luacLittleEndian)
@@ -177,7 +172,7 @@ public class LoadState
 	/** Load a lua strin gvalue from the input stream
 	 * @return the {@link LuaString} value laoded.
 	 **/
-	LuaString loadString() throws IOException
+	private LuaString loadString() throws IOException
 	{
 		int size = this.luacSizeofSizeT == 8 ? (int)loadInt64() : loadInt();
 		if(size == 0)
@@ -221,7 +216,7 @@ public class LoadState
 	 * @return the {@link LuaValue} loaded
 	 * @throws IOException if an i/o exception occurs
 	 */
-	LuaValue loadNumber() throws IOException
+	private LuaValue loadNumber() throws IOException
 	{
 		if(luacNumberFormat == NUMBER_FORMAT_INTS_ONLY)
 		    return LuaInteger.valueOf(loadInt());
@@ -233,7 +228,7 @@ public class LoadState
 	 * @param f the function prototype
 	 * @throws IOException if an i/o exception occurs
 	 */
-	void loadConstants(Prototype f) throws IOException
+	private void loadConstants(Prototype f) throws IOException
 	{
 		int n = loadInt();
 		LuaValue[] values = n > 0 ? new LuaValue[n] : NOVALUES;
@@ -274,7 +269,7 @@ public class LoadState
 	 * @param f the function Prototype
 	 * @throws IOException if there is an i/o exception
 	 */
-	void loadDebug(Prototype f) throws IOException
+	private void loadDebug(Prototype f) throws IOException
 	{
 		f.lineinfo = loadIntArray();
 		int n = loadInt();
@@ -382,7 +377,7 @@ public class LoadState
 
 		// load file as a compiled chunk
 		String sname = getSourceName(name);
-		LoadState s = new LoadState(stream, sname);
+		LoadState s = new LoadState(stream);
 		s.loadHeader();
 
 		// check format
@@ -414,9 +409,8 @@ public class LoadState
 	}
 
 	/** Private constructor for create a load state */
-	private LoadState(InputStream stream, String name)
+	private LoadState(InputStream stream)
 	{
-		this.name = name;
 		this.is = new DataInputStream(stream);
 	}
 }
