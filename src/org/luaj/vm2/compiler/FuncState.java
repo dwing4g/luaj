@@ -21,11 +21,11 @@ public class FuncState extends LuaC
 
 	static class BlockCnt
 	{
-		BlockCnt previous;                /* chain */
-		IntPtr   breaklist = new IntPtr(); /* list of jumps out of this loop */
-		short    nactvar;                 /* # active locals outside the breakable structure */
-		boolean  upval;                   /* true if some variable in the block is an upvalue */
-		boolean  isbreakable;             /* true if `block' is a loop */
+		BlockCnt previous;   /* chain */
+		int      breaklist;  /* list of jumps out of this loop */
+		short    nactvar;    /* # active locals outside the breakable structure */
+		boolean  upval;      /* true if some variable in the block is an upvalue */
+		boolean  isbreakable; /* true if `block' is a loop */
 	}
 
 	Prototype                  _f;                                          /* current function header */
@@ -36,7 +36,7 @@ public class FuncState extends LuaC
 	BlockCnt                   _bl;                                         /* chain of current blocks */
 	int                        _pc;                                         /* next position to code (equivalent to `ncode') */
 	int                        lasttarget;                                  /* `pc' of last `jump target' */
-	IntPtr                     _jpc;                                        /* list of pending jumps to `pc' */
+	int                        _jpc;                                        /* list of pending jumps to `pc' */
 	int                        freereg;                                     /* first free register */
 	int                        nk;                                          /* number of elements in `k' */
 	int                        np;                                          /* number of elements in `p' */
@@ -165,7 +165,7 @@ public class FuncState extends LuaC
 
 	void enterblock(BlockCnt bl1, boolean isbreakable)
 	{
-		bl1.breaklist.i = LexState.NO_JUMP;
+		bl1.breaklist = LexState.NO_JUMP;
 		bl1.isbreakable = isbreakable;
 		bl1.nactvar = this.nactvar;
 		bl1.upval = false;
@@ -185,7 +185,7 @@ public class FuncState extends LuaC
 		_assert(!bl.isbreakable || !bl.upval);
 		_assert(bl.nactvar == this.nactvar);
 		this.freereg = this.nactvar; /* free registers */
-		this.patchtohere(bl.breaklist.i);
+		this.patchtohere(bl.breaklist);
 	}
 
 	void closelistfield(ConsControl cc)
@@ -260,11 +260,11 @@ public class FuncState extends LuaC
 
 	int jump()
 	{
-		int jpc = this._jpc.i; /* save list of jumps to here */
-		this._jpc.i = LexState.NO_JUMP;
-		IntPtr j = new IntPtr(this.codeAsBx(OP_JMP, 0, LexState.NO_JUMP));
-		this.concat(j, jpc); /* keep them on hold */
-		return j.i;
+		int jpc = _jpc; /* save list of jumps to here */
+		_jpc = LexState.NO_JUMP;
+		int j = codeAsBx(OP_JMP, 0, LexState.NO_JUMP);
+		j = concat(j, jpc); /* keep them on hold */
+		return j;
 	}
 
 	void ret(int first, int nret)
@@ -367,42 +367,43 @@ public class FuncState extends LuaC
 
 	void dischargejpc()
 	{
-		this.patchlistaux(this._jpc.i, this._pc, NO_REG, this._pc);
-		this._jpc.i = LexState.NO_JUMP;
+		patchlistaux(_jpc, this._pc, NO_REG, this._pc);
+		_jpc = LexState.NO_JUMP;
 	}
 
 	void patchlist(int list, int target)
 	{
 		if(target == this._pc)
-			this.patchtohere(list);
+			patchtohere(list);
 		else
 		{
 			_assert(target < this._pc);
-			this.patchlistaux(list, target, NO_REG, target);
+			patchlistaux(list, target, NO_REG, target);
 		}
 	}
 
 	void patchtohere(int list)
 	{
-		this.getlabel();
-		this.concat(this._jpc, list);
+		getlabel();
+		_jpc = concat(_jpc, list);
 	}
 
-	void concat(IntPtr l1, int l2)
+	int concat(int l1, int l2)
 	{
 		if(l2 == LexState.NO_JUMP)
-		    return;
-		if(l1.i == LexState.NO_JUMP)
-			l1.i = l2;
+		    return l1;
+		if(l1 == LexState.NO_JUMP)
+			l1 = l2;
 		else
 		{
-			int list = l1.i;
+			int list = l1;
 			int next;
 			while((next = this.getjump(list)) != LexState.NO_JUMP)
 				/* find last element */
 				list = next;
-			this.fixjump(list, l2);
+			fixjump(list, l2);
 		}
+		return l1;
 	}
 
 	void checkstack(int n)
@@ -620,13 +621,13 @@ public class FuncState extends LuaC
 	{
 		this.discharge2reg(e, reg);
 		if(e._k == LexState.VJMP)
-		    this.concat(e.t, e.u.s.info); /* put this jump in `t' list */
+		    e.t = concat(e.t, e.u.s.info); /* put this jump in `t' list */
 		if(e.hasjumps())
 		{
 			int _final; /* position after whole expression */
 			int p_f = LexState.NO_JUMP; /* position of an eventual LOAD false */
 			int p_t = LexState.NO_JUMP; /* position of an eventual LOAD true */
-			if(this.need_value(e.t.i) || this.need_value(e.f.i))
+			if(this.need_value(e.t) || this.need_value(e.f))
 			{
 				int fj = (e._k == LexState.VJMP) ? LexState.NO_JUMP : this
 				        .jump();
@@ -635,10 +636,10 @@ public class FuncState extends LuaC
 				this.patchtohere(fj);
 			}
 			_final = this.getlabel();
-			this.patchlistaux(e.f.i, _final, reg, p_f);
-			this.patchlistaux(e.t.i, _final, reg, p_t);
+			this.patchlistaux(e.f, _final, reg, p_f);
+			this.patchlistaux(e.t, _final, reg, p_t);
 		}
-		e.f.i = e.t.i = LexState.NO_JUMP;
+		e.f = e.t = LexState.NO_JUMP;
 		e.u.s.info = reg;
 		e._k = LexState.VNONRELOC;
 	}
@@ -814,9 +815,9 @@ public class FuncState extends LuaC
 				break;
 			}
 		}
-		this.concat(e.f, pc1); /* insert last jump in `f' list */
-		this.patchtohere(e.t.i);
-		e.t.i = LexState.NO_JUMP;
+		e.f = concat(e.f, pc1); /* insert last jump in `f' list */
+		patchtohere(e.t);
+		e.t = LexState.NO_JUMP;
 	}
 
 	void goiffalse(expdesc e)
@@ -847,9 +848,9 @@ public class FuncState extends LuaC
 				break;
 			}
 		}
-		this.concat(e.t, pc1); /* insert last jump in `t' list */
-		this.patchtohere(e.f.i);
-		e.f.i = LexState.NO_JUMP;
+		e.t = concat(e.t, pc1); /* insert last jump in `t' list */
+		patchtohere(e.f);
+		e.f = LexState.NO_JUMP;
 	}
 
 	void codenot(expdesc e)
@@ -892,12 +893,12 @@ public class FuncState extends LuaC
 		}
 		/* interchange true and false lists */
 		{
-			int temp = e.f.i;
-			e.f.i = e.t.i;
-			e.t.i = temp;
+			int temp = e.f;
+			e.f = e.t;
+			e.t = temp;
 		}
-		this.removevalues(e.f.i);
-		this.removevalues(e.t.i);
+		this.removevalues(e.f);
+		this.removevalues(e.t);
 	}
 
 	void indexed(expdesc t, expdesc k)
@@ -1061,18 +1062,18 @@ public class FuncState extends LuaC
 		{
 			case LexState.OPR_AND:
 			{
-				_assert(e1.t.i == LexState.NO_JUMP); /* list must be closed */
-				this.dischargevars(e2);
-				this.concat(e2.f, e1.f.i);
+				_assert(e1.t == LexState.NO_JUMP); /* list must be closed */
+				dischargevars(e2);
+				e2.f = concat(e2.f, e1.f);
 				// *e1 = *e2;
 				e1.setvalue(e2);
 				break;
 			}
 			case LexState.OPR_OR:
 			{
-				_assert(e1.f.i == LexState.NO_JUMP); /* list must be closed */
-				this.dischargevars(e2);
-				this.concat(e2.t, e1.t.i);
+				_assert(e1.f == LexState.NO_JUMP); /* list must be closed */
+				dischargevars(e2);
+				e2.t = concat(e2.t, e1.t);
 				// *e1 = *e2;
 				e1.setvalue(e2);
 				break;

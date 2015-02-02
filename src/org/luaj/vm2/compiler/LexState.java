@@ -759,42 +759,42 @@ public class LexState
 			}
 		}
 
-		final U      u = new U();
-		final IntPtr t = new IntPtr(); /* patch list of `exit when true' */
-		final IntPtr f = new IntPtr(); /* patch list of `exit when false' */
+		final U u = new U();
+		int     t;          /* patch list of `exit when true' */
+		int     f;          /* patch list of `exit when false' */
 
 		void init(int k, int i)
 		{
-			this.f.i = NO_JUMP;
-			this.t.i = NO_JUMP;
-			this._k = k;
-			this.u.s.info = i;
+			f = NO_JUMP;
+			t = NO_JUMP;
+			_k = k;
+			u.s.info = i;
 		}
 
 		boolean hasjumps()
 		{
-			return (t.i != f.i);
+			return (t != f);
 		}
 
 		boolean isnumeral()
 		{
-			return (_k == VKNUM && t.i == NO_JUMP && f.i == NO_JUMP);
+			return (_k == VKNUM && t == NO_JUMP && f == NO_JUMP);
 		}
 
 		public void setvalue(expdesc other)
 		{
-			this._k = other._k;
-			this.u._nval = other.u._nval;
-			this.u.s.info = other.u.s.info;
-			this.u.s.aux = other.u.s.aux;
-			this.t.i = other.t.i;
-			this.f.i = other.f.i;
+			_k = other._k;
+			u._nval = other.u._nval;
+			u.s.info = other.u.s.info;
+			u.s.aux = other.u.s.aux;
+			t = other.t;
+			f = other.f;
 		}
 	}
 
 	static boolean hasmultret(int k)
 	{
-		return ((k) == VCALL || (k) == VVARARG);
+		return k == VCALL || k == VVARARG;
 	}
 
 	/*----------------------------------------------------------------------
@@ -989,7 +989,7 @@ public class LexState
 		this._fs = fs;
 		fs._pc = 0;
 		fs.lasttarget = -1;
-		fs._jpc = new IntPtr(NO_JUMP);
+		fs._jpc = NO_JUMP;
 		fs.freereg = 0;
 		fs.nk = 0;
 		fs.np = 0;
@@ -1587,7 +1587,7 @@ public class LexState
 		BlockCnt bl = new BlockCnt();
 		fs.enterblock(bl, false);
 		this.chunk();
-		LuaC._assert(bl.breaklist.i == NO_JUMP);
+		LuaC._assert(bl.breaklist == NO_JUMP);
 		fs.leaveblock();
 	}
 
@@ -1682,7 +1682,7 @@ public class LexState
 		if(v._k == VNIL)
 		    v._k = VFALSE;
 		_fs.goiftrue(v);
-		return v.f.i;
+		return v.f;
 	}
 
 	@SuppressWarnings("null")
@@ -1700,7 +1700,7 @@ public class LexState
 		    syntaxerror("no loop to break");
 		if(upval)
 		    fs.codeABC(Lua.OP_CLOSE, bl.nactvar, 0, 0);
-		fs.concat(bl.breaklist, fs.jump());
+		bl.breaklist = fs.concat(bl.breaklist, fs.jump());
 	}
 
 	void whilestat(int line)
@@ -1870,24 +1870,24 @@ public class LexState
 		 * END */
 		FuncState fs = this._fs;
 		int flist;
-		IntPtr escapelist = new IntPtr(NO_JUMP);
+		int escapelist = NO_JUMP;
 		flist = test_then_block(); /* IF cond THEN block */
 		while(this._t.token == TK_ELSEIF)
 		{
-			fs.concat(escapelist, fs.jump());
+			escapelist = fs.concat(escapelist, fs.jump());
 			fs.patchtohere(flist);
 			flist = test_then_block(); /* ELSEIF cond THEN block */
 		}
 		if(this._t.token == TK_ELSE)
 		{
-			fs.concat(escapelist, fs.jump());
+			escapelist = fs.concat(escapelist, fs.jump());
 			fs.patchtohere(flist);
 			this.next(); /* skip ELSE (after patch, for correct line info) */
 			this.block(); /* `else' part */
 		}
 		else
-			fs.concat(escapelist, flist);
-		fs.patchtohere(escapelist.i);
+			escapelist = fs.concat(escapelist, flist);
+		fs.patchtohere(escapelist);
 		this.check_match(TK_END, TK_IF, line);
 	}
 

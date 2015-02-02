@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="utf-8"?>
+<project name="luaj" default="jar">
+	<!-- install jdk,ant first:
+		example: add this line in linux ~/.bash_profile:
+		export PATH=$PATH:$HOME/apache-ant-1.9.4/bin
+	-->
+	<property name="root" value="."/>
+	<property name="classes" value="${root}/classes"/>
+	<property name="src" value="${root}/src"/>
+	<tstamp>
+		<format property="time" pattern="yyyy-MM-dd HH:mm:ss:SSS Z"/>
+	</tstamp>
+
+	<target name="clean">
+		<delete dir="${classes}"/>
+		<delete file="luaj.jar"/>
+		<delete file="luaj-src.jar"/>
+	</target>
+
+	<target name="compile">
+		<mkdir dir="${classes}"/>
+		<javac destdir="${classes}" encoding="utf-8" source="1.6" target="1.6" debug="true" debuglevel="lines,source" fork="true" memoryMaximumSize="512m" includeantruntime="false">
+			<src path="${src}/"/>
+		</javac>
+	</target>
+
+	<target name="jar" depends="clean, compile">
+		<jar jarfile="luaj.jar" basedir="${classes}" level="9">
+			<manifest>
+				<attribute name="Created-Time" value="${time}"/>
+			</manifest>
+			<fileset file="${src}/*.properties"/>
+		</jar>
+		<jar jarfile="luaj-src.jar" level="9">
+			<manifest>
+				<attribute name="Created-Time" value="${time}"/>
+			</manifest>
+			<fileset dir="${src}/"/>
+		</jar>
+	</target>
+</project>
