@@ -10,7 +10,7 @@ package org.luaj.vm2;
  * @see LuaValue
  *
  */
-abstract public class LuaNumber extends LuaValue
+public abstract class LuaNumber extends LuaValue
 {
 	/** Shared static metatable for all number values represented in lua. */
 	public static LuaValue s_metatable;

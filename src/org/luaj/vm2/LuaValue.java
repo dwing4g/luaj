@@ -1,7 +1,5 @@
 package org.luaj.vm2;
 
-import org.luaj.vm2.lib.JsePlatform;
-
 /**
  * Base class for all concrete lua type values.
  * <p>
@@ -56,7 +54,6 @@ import org.luaj.vm2.lib.JsePlatform;
  * } </pre>
  * For this to work the file must be in the current directory, or in the class path,
  * dependening on the platform.
- * See {@link JsePlatform} for details.
  * <p>
  * In general a {@link LuaError} may be thrown on any operation when the
  * types supplied to any operation are illegal from a lua perspective.
@@ -82,17 +79,16 @@ import org.luaj.vm2.lib.JsePlatform;
  * {@link MOD}, {@link UNM}, {@link LEN}, {@link EQ}, {@link LT},
  * {@link LE}, {@link TOSTRING}, and {@link CONCAT}.
  *
- * @see JsePlatform
  * @see LoadState
  * @see Varargs
  */
 public abstract class LuaValue extends Varargs
 {
 	/** Type enumeration constant for lua numbers that are ints, for compatibility with lua 5.1 number patch only */
-	public static final int        TINT           = (-2);
+	public static final int        TINT           = -2;
 
 	/** Type enumeration constant for lua values that have no type, for example weak table entries */
-	public static final int        TNONE          = (-1);
+	public static final int        TNONE          = -1;
 
 	/** Type enumeration constant for lua nil */
 	public static final int        TNIL           = 0;
@@ -1756,11 +1752,10 @@ public abstract class LuaValue extends Varargs
 	 * Set the environment on an object.
 	 * <p>
 	 * Typically the environment is created once per application via a platform
-	 * helper method such as {@link org.luaj.vm2.lib.JsePlatform#standardGlobals()}
+	 * helper method such as JsePlatform.standardGlobals()
 	 * However, any object can serve as an environment if it contains suitable metatag
 	 * values to implement {@link #get(LuaValue)} to provide the environment values.
 	 * @param env {@link LuaValue} (typically a {@link LuaTable}) containing the environment.
-	 * @see org.luaj.vm2.lib.JsePlatform
 	 */
 	public void setfenv(LuaValue env)
 	{
@@ -4129,9 +4124,9 @@ public abstract class LuaValue extends Varargs
 			case 1:
 				return v[0];
 			case 2:
-				return new PairVarargs(v[0], v[1]);
+				return new VarargsPair(v[0], v[1]);
 			default:
-				return new ArrayVarargs(v, NONE);
+				return new VarargsArray(v, NONE);
 		}
 	}
 
@@ -4150,9 +4145,9 @@ public abstract class LuaValue extends Varargs
 			case 0:
 				return r;
 			case 1:
-				return new PairVarargs(v[0], r);
+				return new VarargsPair(v[0], r);
 			default:
-				return new ArrayVarargs(v, r);
+				return new VarargsArray(v, r);
 		}
 	}
 
@@ -4174,9 +4169,9 @@ public abstract class LuaValue extends Varargs
 			case 1:
 				return v[offset];
 			case 2:
-				return new PairVarargs(v[offset + 0], v[offset + 1]);
+				return new VarargsPair(v[offset + 0], v[offset + 1]);
 			default:
-				return new ArrayPartVarargs(v, offset, length);
+				return new VarargsArrayPart(v, offset, length);
 		}
 	}
 
@@ -4197,9 +4192,9 @@ public abstract class LuaValue extends Varargs
 			case 0:
 				return more;
 			case 1:
-				return new PairVarargs(v[offset], more);
+				return new VarargsPair(v[offset], more);
 			default:
-				return new ArrayPartVarargs(v, offset, length, more);
+				return new VarargsArrayPart(v, offset, length, more);
 		}
 	}
 
@@ -4220,7 +4215,7 @@ public abstract class LuaValue extends Varargs
 			case 0:
 				return v;
 			default:
-				return new PairVarargs(v, r);
+				return new VarargsPair(v, r);
 		}
 	}
 
@@ -4240,23 +4235,23 @@ public abstract class LuaValue extends Varargs
 		switch(v3.narg())
 		{
 			case 0:
-				return new PairVarargs(v1, v2);
+				return new VarargsPair(v1, v2);
 			default:
-				return new ArrayVarargs(new LuaValue[] { v1, v2 }, v3);
+				return new VarargsArray(new LuaValue[] { v1, v2 }, v3);
 		}
 	}
 
-	/** Construct a {@link TailcallVarargs} around a function and arguments.
+	/** Construct a {@link VarargsTailcall} around a function and arguments.
 	 * <p>
 	 * The tail call is not yet called or processing until the client invokes
-	 * {@link TailcallVarargs#eval()} which performs the tail call processing.
+	 * {@link VarargsTailcall#eval()} which performs the tail call processing.
 	 * <p>
 	 * This method is typically not used directly by client code.
 	 * Instead use one of the function invocation methods.
 	 *
 	 * @param func {@link LuaValue} to be called as a tail call
 	 * @param args {@link Varargs} containing the arguments to the call
-	 * @return {@link TailcallVarargs} to be used in tailcall oprocessing.
+	 * @return {@link VarargsTailcall} to be used in tailcall oprocessing.
 	 * @see LuaValue#call()
 	 * @see LuaValue#invoke()
 	 * @see LuaValue#method(LuaValue)
@@ -4264,13 +4259,13 @@ public abstract class LuaValue extends Varargs
 	 */
 	public static Varargs tailcallOf(LuaValue func, Varargs args)
 	{
-		return new TailcallVarargs(func, args);
+		return new VarargsTailcall(func, args);
 	}
 
 	/**
 	 * Callback used during tail call processing to invoke the function once.
 	 * <p>
-	 * This may return a {@link TailcallVarargs} to be evaluated by the client.
+	 * This may return a {@link VarargsTailcall} to be evaluated by the client.
 	 * <p>
 	 * This should not be called directly, instead use on of the call invocation functions.
 	 *
@@ -4335,7 +4330,7 @@ public abstract class LuaValue extends Varargs
 	 * @see LuaValue#varargsOf(LuaValue[])
 	 * @see LuaValue#varargsOf(LuaValue[], Varargs)
 	 */
-	static final class ArrayVarargs extends Varargs
+	static final class VarargsArray extends Varargs
 	{
 		private final LuaValue[] v;
 		private final Varargs    r;
@@ -4348,7 +4343,7 @@ public abstract class LuaValue extends Varargs
 		 * @see LuaValue#varargsOf(LuaValue[])
 		 * @see LuaValue#varargsOf(LuaValue[], Varargs)
 		 */
-		ArrayVarargs(LuaValue[] v, Varargs r)
+		VarargsArray(LuaValue[] v, Varargs r)
 		{
 			this.v = v;
 			this.r = r;
@@ -4381,7 +4376,7 @@ public abstract class LuaValue extends Varargs
 	 * @see LuaValue#varargsOf(LuaValue[], int, int)
 	 * @see LuaValue#varargsOf(LuaValue[], int, int, Varargs)
 	 */
-	static final class ArrayPartVarargs extends Varargs
+	static final class VarargsArrayPart extends Varargs
 	{
 		private final int        offset;
 		private final LuaValue[] v;
@@ -4395,7 +4390,7 @@ public abstract class LuaValue extends Varargs
 		 *
 		 * @see LuaValue#varargsOf(LuaValue[], int, int)
 		 */
-		ArrayPartVarargs(LuaValue[] v, int offset, int length)
+		VarargsArrayPart(LuaValue[] v, int offset, int length)
 		{
 			this.v = v;
 			this.offset = offset;
@@ -4410,7 +4405,7 @@ public abstract class LuaValue extends Varargs
 		 *
 		 * @see LuaValue#varargsOf(LuaValue[], int, int, Varargs)
 		 */
-		public ArrayPartVarargs(LuaValue[] v, int offset, int length, Varargs more)
+		public VarargsArrayPart(LuaValue[] v, int offset, int length, Varargs more)
 		{
 			this.v = v;
 			this.offset = offset;
@@ -4444,7 +4439,7 @@ public abstract class LuaValue extends Varargs
 	 *
 	 * @see LuaValue#varargsOf(LuaValue, Varargs)
 	 */
-	static final class PairVarargs extends Varargs
+	static final class VarargsPair extends Varargs
 	{
 		private final LuaValue v1;
 		private final Varargs  v2;
@@ -4456,7 +4451,7 @@ public abstract class LuaValue extends Varargs
 		 *
 		 * @see LuaValue#varargsOf(LuaValue, Varargs)
 		 */
-		PairVarargs(LuaValue v1, Varargs v2)
+		VarargsPair(LuaValue v1, Varargs v2)
 		{
 			this.v1 = v1;
 			this.v2 = v2;

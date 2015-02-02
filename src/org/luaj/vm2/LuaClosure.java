@@ -1,7 +1,5 @@
 package org.luaj.vm2;
 
-import org.luaj.vm2.LoadState.LuaCompiler;
-import org.luaj.vm2.compiler.LuaC;
 import org.luaj.vm2.lib.LibDebug;
 
 /**
@@ -13,11 +11,11 @@ import org.luaj.vm2.lib.LibDebug;
  * There are three main ways {@link LuaClosure} instances are created:
  * <ul>
  * <li>Construct an instance using {@link #LuaClosure(Prototype, LuaValue)}</li>
- * <li>Construct it indirectly by loading a chunk via {@link LuaCompiler#load(java.io.InputStream, String, LuaValue)}
+ * <li>Construct it indirectly by loading a chunk via {@link LoadState.LuaCompiler#load(InputStream, String, LuaValue)}
  * <li>Execute the lua bytecode {@link Lua#OP_CLOSURE} as part of bytecode processing
  * </ul>
  * <p>
- * To construct it directly, the {@link Prototype} is typically created via a compiler such as {@link LuaC}:
+ * To construct it directly, the {@link Prototype} is typically created via a compiler such as LuaC:
  * <pre> {@code
  * InputStream is = new ByteArrayInputStream("print('hello,world').getBytes());
  * Prototype p = LuaC.instance.compile(is, "script");
@@ -25,8 +23,8 @@ import org.luaj.vm2.lib.LibDebug;
  * LuaClosure f = new LuaClosure(p, _G);
  * }</pre>
  * <p>
- * To construct it indirectly, the {@link LuaC} compiler may be used,
- * which implements the {@link LuaCompiler} interface:
+ * To construct it indirectly, the LuaC compiler may be used,
+ * which implements the {@link LoadState.LuaCompiler} interface:
  * <pre> {@code
  * LuaFunction f = LuaC.instance.load(is, "script", _G);
  * }</pre>
@@ -434,19 +432,19 @@ public class LuaClosure extends LuaFunction
 						switch(i & Lua.MASK_B)
 						{
 							case (1 << Lua.POS_B):
-								return new TailcallVarargs(stack[a], NONE);
+								return new VarargsTailcall(stack[a], NONE);
 							case (2 << Lua.POS_B):
-								return new TailcallVarargs(stack[a], stack[a + 1]);
+								return new VarargsTailcall(stack[a], stack[a + 1]);
 							case (3 << Lua.POS_B):
-								return new TailcallVarargs(stack[a], varargsOf(stack[a + 1], stack[a + 2]));
+								return new VarargsTailcall(stack[a], varargsOf(stack[a + 1], stack[a + 2]));
 							case (4 << Lua.POS_B):
-								return new TailcallVarargs(stack[a], varargsOf(stack[a + 1], stack[a + 2], stack[a + 3]));
+								return new VarargsTailcall(stack[a], varargsOf(stack[a + 1], stack[a + 2], stack[a + 3]));
 							default:
 								b = i >>> 23;
 								v = b > 0 ?
 								        varargsOf(stack, a + 1, b - 1) : // exact arg count
 								        varargsOf(stack, a + 1, top - v.narg() - (a + 1), v); // from prev top
-								return new TailcallVarargs(stack[a], v);
+								return new VarargsTailcall(stack[a], v);
 						}
 
 					case Lua.OP_RETURN: /*	A B	return R(A), ... ,R(A+B-2)	(see note)	*/

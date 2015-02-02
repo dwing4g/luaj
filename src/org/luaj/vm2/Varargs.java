@@ -656,22 +656,22 @@ public abstract class Varargs
 			case 0:
 				return arg(start);
 			case 1:
-				return new LuaValue.PairVarargs(arg(start), arg(end));
+				return new LuaValue.VarargsPair(arg(start), arg(end));
 		}
-		return end < start ? (Varargs)LuaValue.NONE : new SubVarargs(this, start, end);
+		return end < start ? (Varargs)LuaValue.NONE : new VarargsSub(this, start, end);
 	}
 
 	/**
 	 * Implementation of Varargs for use in the Varargs.subargs() function.
 	 * @see Varargs#subargs(int)
 	 */
-	private static class SubVarargs extends Varargs
+	private static class VarargsSub extends Varargs
 	{
 		private final Varargs v;
 		private final int     start;
 		private final int     end;
 
-		public SubVarargs(Varargs varargs, int start, int end)
+		public VarargsSub(Varargs varargs, int start, int end)
 		{
 			this.v = varargs;
 			this.start = start;

@@ -1,7 +1,7 @@
 package org.luaj.vm2;
 
 /**
- * {@link java.lang.Error} sublcass that indicates a lua thread that is no
+ * {@link Error} sublcass that indicates a lua thread that is no
  * longer referenced has been detected.
  * <p>
  * The java thread in which this is thrown should correspond to a

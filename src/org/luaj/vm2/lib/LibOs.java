@@ -2,6 +2,7 @@ package org.luaj.vm2.lib;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.Date;
 import java.util.concurrent.atomic.AtomicLong;
 import org.luaj.vm2.LuaTable;
 import org.luaj.vm2.LuaValue;
@@ -197,7 +198,7 @@ public class LibOs extends LibFunctionV
 	 */
 	protected static String date(String format, double time)
 	{
-		return new java.util.Date((long)(time * 1000)).toString();
+		return new Date((long)(time * 1000)).toString();
 	}
 
 	/**

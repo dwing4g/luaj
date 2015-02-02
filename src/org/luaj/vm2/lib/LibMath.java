@@ -12,7 +12,7 @@ import org.luaj.vm2.Varargs;
  * <p>
  * It contains only the math library support that is possible on JME.
  * For a more complete implementation based on math functions specific to JSE
- * use {@link org.luaj.vm2.lib.jse.JseMathLib}.
+ * use {@link JseMathLib}.
  * In Particular the following math functions are <b>not</b> implemented by this library:
  * <ul>
  * <li>acos</li>

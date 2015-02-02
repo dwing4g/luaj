@@ -1,32 +1,8 @@
-/*******************************************************************************
-* Copyright (c) 2007-2012 LuaJ. All rights reserved.
-*
-* Permission is hereby granted, free of charge, to any person obtaining a copy
-* of this software and associated documentation files (the "Software"), to deal
-* in the Software without restriction, including without limitation the rights
-* to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-* copies of the Software, and to permit persons to whom the Software is
-* furnished to do so, subject to the following conditions:
-*
-* The above copyright notice and this permission notice shall be included in
-* all copies or substantial portions of the Software.
-*
-* THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-* IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-* FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-* AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-* LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-* OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
-* THE SOFTWARE.
-******************************************************************************/
 package org.luaj.vm2;
 
 import java.lang.ref.WeakReference;
 import java.util.concurrent.atomic.AtomicLong;
-import org.luaj.vm2.lib.LibBase;
-import org.luaj.vm2.lib.LibCoroutine;
 import org.luaj.vm2.lib.LibDebug;
-import org.luaj.vm2.lib.JsePlatform;
 
 /**
  * Subclass of {@link LuaValue} that implements
@@ -39,10 +15,9 @@ import org.luaj.vm2.lib.JsePlatform;
  * the global environment may be passed along according to rules of lua.
  * This is done via a call to {@link #setGlobals(LuaValue)}
  * at some point during globals initialization.
- * See {@link LibBase} for additional documentation and example code.
+ * See LibBase for additional documentation and example code.
  * <p>
- * The utility classes {@link JsePlatform}
- * see to it that this initialization is done properly.
+ * The utility classes JsePlatform see to it that this initialization is done properly.
  * For this reason it is highly recommended to use one of these classes
  * when initializing globals.
  * <p>
@@ -52,13 +27,11 @@ import org.luaj.vm2.lib.JsePlatform;
  * <p>
  * Each Java thread wakes up at regular intervals and checks a weak reference
  * to determine if it can ever be resumed.  If not, it throws
- * {@link OrphanedThread} which is an {@link java.lang.Error}.
+ * {@link OrphanedThread} which is an {@link Error}.
  * Applications should not catch {@link OrphanedThread}, because it can break
  * the thread safety of luaj.
  *
  * @see LuaValue
- * @see JsePlatform
- * @see LibCoroutine
  */
 public class LuaThread extends LuaValue
 {

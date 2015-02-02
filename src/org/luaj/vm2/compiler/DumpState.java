@@ -139,7 +139,7 @@ public class DumpState
 							break;
 						case NUMBER_FORMAT_INTS_ONLY:
 							if(!ALLOW_INTEGER_CASTING && !o.isint())
-							    throw new java.lang.IllegalArgumentException("not an integer: " + o);
+							    throw new IllegalArgumentException("not an integer: " + o);
 							writer.write(LuaValue.TNUMBER);
 							dumpInt(o.toint());
 							break;

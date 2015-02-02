@@ -18,19 +18,19 @@ package org.luaj.vm2;
  * execution framework.
  * @see Prototype
  */
-public class TailcallVarargs extends Varargs
+public class VarargsTailcall extends Varargs
 {
 	private LuaValue func;
 	private Varargs  args;
 	private Varargs  result;
 
-	public TailcallVarargs(LuaValue f, Varargs args)
+	public VarargsTailcall(LuaValue f, Varargs args)
 	{
 		this.func = f;
 		this.args = args;
 	}
 
-	public TailcallVarargs(LuaValue object, LuaValue methodname, Varargs args)
+	public VarargsTailcall(LuaValue object, LuaValue methodname, Varargs args)
 	{
 		this.func = object.get(methodname);
 		this.args = LuaValue.varargsOf(object, args);
@@ -50,7 +50,7 @@ public class TailcallVarargs extends Varargs
 			Varargs r = func.onInvoke(args);
 			if(r.isTailcall())
 			{
-				TailcallVarargs t = (TailcallVarargs)r;
+				VarargsTailcall t = (VarargsTailcall)r;
 				func = t.func;
 				args = t.args;
 			}

@@ -27,9 +27,9 @@ import org.luaj.vm2.LuaValue;
  * on {@link LuaValue} may be used:
  * <ul>
  * <li>{@link LuaValue#listOf(LuaValue[])}</li>
- * <li>{@link LuaValue#listOf(LuaValue[], org.luaj.vm2.Varargs)}</li>
+ * <li>{@link LuaValue#listOf(LuaValue[], Varargs)}</li>
  * <li>{@link LuaValue#tableOf(LuaValue[])}</li>
- * <li>{@link LuaValue#tableOf(LuaValue[], LuaValue[], org.luaj.vm2.Varargs)}</li>
+ * <li>{@link LuaValue#tableOf(LuaValue[], LuaValue[], Varargs)}</li>
  * </ul>
  * The method {@link CoerceJavaToLua#coerce(Object)} looks as the type and dimesioning
  * of the argument and tries to guess the best fit for corrsponding lua scalar,

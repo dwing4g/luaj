@@ -41,7 +41,7 @@ import org.luaj.vm2.compiler.LuaC;
  * <p>
  * This has been implemented to match as closely as possible the behavior in the corresponding library in C.
  * @see LibFunction
- * @see org.luaj.vm2.lib.JsePlatform
+ * @see JsePlatform
  * @see LuaC
  * @see <a href="http://www.keplerproject.org/luajava/manual.html#luareference">http://www.keplerproject.org/luajava/manual.html#luareference</a>
  */

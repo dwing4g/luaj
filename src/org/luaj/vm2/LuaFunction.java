@@ -1,19 +1,16 @@
 package org.luaj.vm2;
 
-import org.luaj.vm2.lib.LibFunction;
-
 /**
  * Base class for functions implemented in Java.
  * <p>
- * Direct subclass include {@link LibFunction} which is the base class for
+ * Direct subclass include LibFunction which is the base class for
  * all built-in library functions coded in Java,
  * and {@link LuaClosure}, which represents a lua closure
  * whose bytecode is interpreted when the function is invoked.
  * @see LuaValue
- * @see LibFunction
  * @see LuaClosure
  */
-abstract public class LuaFunction extends LuaValue
+public abstract class LuaFunction extends LuaValue
 {
 	/** Shared static metatable for all functions and closures. */
 	public static LuaValue s_metatable;
