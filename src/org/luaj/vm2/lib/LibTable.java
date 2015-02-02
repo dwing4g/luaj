@@ -43,7 +43,7 @@ public class LibTable extends LibFunction1
 		bind(t, LibTable.class, new String[] { "getn", "maxn", }, 1);
 		bind(t, TableLibV.class, new String[] {
 		        "remove", "concat", "insert", "sort", "foreach", "foreachi", });
-		env.set("table", t);
+		_env.set("table", t);
 		LibPackage.instance.LOADED.set("table", t);
 		return t;
 	}
@@ -80,7 +80,7 @@ public class LibTable extends LibFunction1
 				{ // "concat" (table [, sep [, i [, j]]]) -> string
 					LuaTable table = args.checktable(1);
 					return table.concat(
-					        args.optstring(2, LuaValue.EMPTYSTRING),
+					        args.arg(2).optstring(LuaValue.EMPTYSTRING),
 					        args.optint(3, 1),
 					        args.isvalue(4) ? args.checkint(4) : table.length());
 				}

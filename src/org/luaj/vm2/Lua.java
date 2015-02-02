@@ -9,7 +9,7 @@ package org.luaj.vm2;
 public class Lua
 {
 	/** version is supplied by ant build task */
-	public static final String _VERSION        = "Luaj 0.0";
+	public static final String _VERSION        = "Lua 5.1";
 
 	/** use return values from previous op */
 	public static final int    LUA_MULTRET     = -1;
@@ -130,27 +130,13 @@ public class Lua
 		return r & ~BITRK;
 	}
 
-	public static final int MAXINDEXRK = (BITRK - 1);
+	public static final int MAXINDEXRK = BITRK - 1;
 
 	/** code a constant index as a RK value */
 	public static int RKASK(int x)
 	{
 		return x | BITRK;
 	}
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 	/**
 	** invalid register that fits in 8 bits
@@ -163,7 +149,6 @@ public class Lua
 	** RK(x) == if ISK(x) then Kst(INDEXK(x)) else R(x)
 	*/
 
-	//@formatter:off
 	/*
 	** grep "ORDER OP" if you change these enums
 	*/
@@ -232,7 +217,6 @@ public class Lua
 	public static final int OP_NEQ = 61; // ~=
 	public static final int OP_AND = 60; // and
 	public static final int OP_OR  = 59; // or
-	//@formatter:on
 
 	/*===========================================================================
 	  Notes:

@@ -50,7 +50,7 @@ public class LibString extends LibFunction1
 		        "byte", "char", "find", "format",
 		        "gmatch", "gsub", "match", "rep",
 		        "sub" });
-		env.set("string", t);
+		_env.set("string", t);
 		instance = t;
 		if(LuaString.s_metatable == null)
 		    LuaString.s_metatable = tableOf(new LuaValue[] { INDEX, t });

@@ -84,21 +84,21 @@ public class LibPackage extends LibFunction1
 	@Override
 	public LuaValue call(LuaValue arg)
 	{
-		env.set("require", new PkgLib1(env, "require", OP_REQUIRE, this));
-		env.set("module", new PkgLibV(env, "module", OP_MODULE, this));
-		env.set("package", PACKAGE = tableOf(new LuaValue[] {
+		_env.set("require", new PkgLib1(_env, "require", OP_REQUIRE, this));
+		_env.set("module", new PkgLibV(_env, "module", OP_MODULE, this));
+		_env.set("package", PACKAGE = tableOf(new LuaValue[] {
 		        _LOADED, LOADED = tableOf(),
 		        _PRELOAD, tableOf(),
 		        _PATH, valueOf(DEFAULT_LUA_PATH),
-		        _LOADLIB, new PkgLibV(env, "loadlib", OP_LOADLIB, this),
-		        _SEEALL, new PkgLib1(env, "seeall", OP_SEEALL, this),
+		        _LOADLIB, new PkgLibV(_env, "loadlib", OP_LOADLIB, this),
+		        _SEEALL, new PkgLib1(_env, "seeall", OP_SEEALL, this),
 		        _LOADERS, listOf(new LuaValue[] {
-		                preload_loader = new PkgLibV(env, "preload_loader", OP_PRELOAD_LOADER, this),
-		                lua_loader = new PkgLibV(env, "lua_loader", OP_LUA_LOADER, this),
-		                java_loader = new PkgLibV(env, "java_loader", OP_JAVA_LOADER, this),
+		                preload_loader = new PkgLibV(_env, "preload_loader", OP_PRELOAD_LOADER, this),
+		                lua_loader = new PkgLibV(_env, "lua_loader", OP_LUA_LOADER, this),
+		                java_loader = new PkgLibV(_env, "java_loader", OP_JAVA_LOADER, this),
 		        }) }));
 		LOADED.set("package", PACKAGE);
-		return env;
+		return _env;
 	}
 
 	static final class PkgLib1 extends LibFunction1
@@ -107,7 +107,7 @@ public class LibPackage extends LibFunction1
 
 		public PkgLib1(LuaValue env, String name, int opcode, LibPackage lib)
 		{
-			this.env = env;
+			this._env = env;
 			this._name = name;
 			this._opcode = opcode;
 			this.lib = lib;
@@ -140,7 +140,7 @@ public class LibPackage extends LibFunction1
 
 		public PkgLibV(LuaValue env, String name, int opcode, LibPackage lib)
 		{
-			this.env = env;
+			this._env = env;
 			this._name = name;
 			this._opcode = opcode;
 			this.lib = lib;
@@ -430,7 +430,7 @@ public class LibPackage extends LibFunction1
 		{
 			c = Class.forName(classname);
 			v = (LuaValue)c.newInstance();
-			v.setfenv(env);
+			v.setfenv(_env);
 			return v;
 		}
 		catch(ClassNotFoundException cnfe)

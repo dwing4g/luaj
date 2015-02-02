@@ -47,7 +47,6 @@ import java.util.List;
  * <li>{@link LuaValue#tableOf(LuaValue[], LuaValue[])} initialize array and named parts</li>
  * <li>{@link LuaValue#tableOf(LuaValue[], LuaValue[], Varargs)} initialize array and named parts</li>
  * </ul>
- * @see LuaValue
  */
 public class LuaTable extends LuaValue
 {

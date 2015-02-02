@@ -120,10 +120,6 @@ public abstract class LuaValue extends Varargs
 	/** Type enumeration constant for unknown values, for compatibility with C-based lua only */
 	public static final int        TVALUE         = 9;
 
-	/** String array constant containing names of each of the lua value types
-	 * @see #type()
-	 * @see #typename()
-	 */
 	public static final String[]   TYPE_NAMES     = {
 	                                              "nil",
 	                                              "boolean",
@@ -138,13 +134,13 @@ public abstract class LuaValue extends Varargs
 	                                              };
 
 	/** LuaValue constant corresponding to lua {@code nil} */
-	public static final LuaValue   NIL            = LuaNil._NIL;
+	public static final LuaValue   NIL            = new LuaNil();
 
 	/** LuaBoolean constant corresponding to lua {@code true} */
-	public static final LuaBoolean TRUE           = LuaBoolean._TRUE;
+	public static final LuaBoolean TRUE           = new LuaBoolean(true);
 
 	/** LuaBoolean constant corresponding to lua {@code false} */
-	public static final LuaBoolean FALSE          = LuaBoolean._FALSE;
+	public static final LuaBoolean FALSE          = new LuaBoolean(false);
 
 	/** LuaValue constant corresponding to a {@link Varargs} list of no values */
 	public static final LuaValue   NONE           = new None();
@@ -248,7 +244,7 @@ public abstract class LuaValue extends Varargs
 	 * {@link TTHREAD}
 	 * @see #typename()
 	 */
-	abstract public int type();
+	public abstract int type();
 
 	/** Get the String name of the type of this value.
 	 * <p>
@@ -259,7 +255,7 @@ public abstract class LuaValue extends Varargs
 	 * "table", "function", "userdata", "thread"
 	 * @see #type()
 	 */
-	abstract public String typename();
+	public abstract String typename();
 
 	/** Check if {@code this} is a {@code boolean}
 	 * @return true if this is a {@code boolean}, otherwise false

@@ -5,10 +5,6 @@ package org.luaj.vm2;
  * <p>
  * The main subclasses are {@link LuaInteger} which holds values that fit in a java int,
  * and {@link LuaDouble} which holds all other number values.
- * @see LuaInteger
- * @see LuaDouble
- * @see LuaValue
- *
  */
 public abstract class LuaNumber extends LuaValue
 {

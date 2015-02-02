@@ -93,7 +93,7 @@ public class LibOs extends LibFunctionV
 	{
 		LuaTable t = new LuaTable();
 		bind(t, this.getClass(), NAMES, CLOCK);
-		env.set("os", t);
+		_env.set("os", t);
 		LibPackage.instance.LOADED.set("os", t);
 		return t;
 	}
@@ -112,7 +112,7 @@ public class LibOs extends LibFunctionV
 				case DATE:
 				{
 					String s = args.optjstring(1, null);
-					double t = args.optdouble(2, -1);
+					double t = args.arg(2).optdouble(-1);
 					return valueOf(date(s, t == -1 ? System.currentTimeMillis() / 1000. : t));
 				}
 				case DIFFTIME:

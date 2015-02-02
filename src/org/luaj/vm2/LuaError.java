@@ -19,6 +19,7 @@ public class LuaError extends RuntimeException
 	private static final long serialVersionUID = 1L;
 
 	private String            traceback;
+	private Throwable         cause;
 
 	/**
 	 *  Run the error hook if there is one
@@ -46,8 +47,6 @@ public class LuaError extends RuntimeException
 		}
 		return msg;
 	}
-
-	private Throwable cause;
 
 	/** Construct LuaError when a program exception occurs.
 	 * <p>

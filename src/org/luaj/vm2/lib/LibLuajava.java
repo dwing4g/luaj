@@ -79,7 +79,7 @@ public class LibLuajava extends LibFunctionV
 				{
 					LuaTable t = new LuaTable();
 					bind(t, LibLuajava.class, NAMES, BINDCLASS);
-					env.set("luajava", t);
+					_env.set("luajava", t);
 					LibPackage.instance.LOADED.set("luajava", t);
 					return t;
 				}

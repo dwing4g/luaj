@@ -122,7 +122,7 @@ public class LibDebug extends LibFunctionV
 		DEBUG_ENABLED = true;
 		LuaTable t = new LuaTable();
 		bind(t, LibDebug.class, NAMES, DEBUG);
-		env.set("debug", t);
+		_env.set("debug", t);
 		LibPackage.instance.LOADED.set("debug", t);
 		return t;
 	}
@@ -497,7 +497,7 @@ public class LibDebug extends LibFunctionV
 	{
 		int a = 1;
 		LuaThread thread = args.isthread(a) ? args.checkthread(a++) : LuaThread.getRunning();
-		LuaValue func = args.optfunction(a++, null);
+		LuaValue func = args.arg(a++).optfunction(null);
 		String str = args.optjstring(a++, "");
 		int count = args.optint(a++, 0);
 		boolean call = false, line = false, rtrn = false;
@@ -687,7 +687,7 @@ public class LibDebug extends LibFunctionV
 		LuaValue object = args.arg(1);
 		try
 		{
-			LuaValue mt = args.opttable(2, null);
+			LuaValue mt = args.arg(2).opttable(null);
 			switch(object.type())
 			{
 				case TNIL:

@@ -20,21 +20,14 @@ package org.luaj.vm2;
  */
 public final class LuaBoolean extends LuaValue
 {
-	/** The singleton instance representing lua {@code true} */
-	static final LuaBoolean _TRUE  = new LuaBoolean(true);
-
-	/** The singleton instance representing lua {@code false} */
-	static final LuaBoolean _FALSE = new LuaBoolean(false);
-
 	/** Shared static metatable for boolean values represented in lua. */
-	public static LuaValue  s_metatable;
+	public static LuaValue s_metatable;
 
-	/** The value of the boolean */
-	public final boolean    v;
+	public final boolean   v;
 
 	LuaBoolean(boolean b)
 	{
-		this.v = b;
+		v = b;
 	}
 
 	@Override
@@ -85,7 +78,7 @@ public final class LuaBoolean extends LuaValue
 	@Override
 	public boolean optboolean(boolean defval)
 	{
-		return this.v;
+		return v;
 	}
 
 	@Override

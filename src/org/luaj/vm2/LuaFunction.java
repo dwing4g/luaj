@@ -15,16 +15,16 @@ public abstract class LuaFunction extends LuaValue
 	/** Shared static metatable for all functions and closures. */
 	public static LuaValue s_metatable;
 
-	protected LuaValue     env;
+	protected LuaValue     _env;
 
 	public LuaFunction()
 	{
-		this.env = NIL;
+		_env = NIL;
 	}
 
 	public LuaFunction(LuaValue env)
 	{
-		this.env = env;
+		_env = env;
 	}
 
 	@Override
@@ -66,12 +66,12 @@ public abstract class LuaFunction extends LuaValue
 	@Override
 	public LuaValue getfenv()
 	{
-		return env;
+		return _env;
 	}
 
 	@Override
 	public void setfenv(LuaValue env)
 	{
-		this.env = env != null ? env : NIL;
+		this._env = env != null ? env : NIL;
 	}
 }

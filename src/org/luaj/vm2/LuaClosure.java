@@ -259,7 +259,7 @@ public class LuaClosure extends LuaFunction
 						continue;
 
 					case Lua.OP_GETGLOBAL: /*	A Bx	R(A):= Gbl[Kst(Bx)]				*/
-						stack[a] = env.get(k[i >>> 14]);
+						stack[a] = _env.get(k[i >>> 14]);
 						continue;
 
 					case Lua.OP_GETTABLE: /*	A B C	R(A):= R(B)[RK(C)]				*/
@@ -267,7 +267,7 @@ public class LuaClosure extends LuaFunction
 						continue;
 
 					case Lua.OP_SETGLOBAL: /*	A Bx	Gbl[Kst(Bx)]:= R(A)				*/
-						env.set(k[i >>> 14], stack[a]);
+						_env.set(k[i >>> 14], stack[a]);
 						continue;
 
 					case Lua.OP_SETUPVAL: /*	A B	UpValue[B]:= R(A)				*/
@@ -542,7 +542,7 @@ public class LuaClosure extends LuaFunction
 					case Lua.OP_CLOSURE: /*	A Bx	R(A):= closure(KPROTO[Bx], R(A), ... ,R(A+n))	*/
 					{
 						Prototype newp = p.p[i >>> 14];
-						LuaClosure newcl = new LuaClosure(newp, env);
+						LuaClosure newcl = new LuaClosure(newp, _env);
 						for(int j = 0, nup = newp.nups; j < nup; ++j)
 						{
 							i = code[pc++];

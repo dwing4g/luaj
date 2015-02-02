@@ -51,7 +51,7 @@ public class LibCoroutine extends LibFunctionV
 		bind(t, LibCoroutine.class, new String[] {
 		        "create", "resume", "running", "status", "yield", "wrap" },
 		        CREATE);
-		env.set("coroutine", t);
+		_env.set("coroutine", t);
 		LibPackage.instance.LOADED.set("coroutine", t);
 		return t;
 	}
@@ -100,7 +100,7 @@ public class LibCoroutine extends LibFunctionV
 			}
 			case WRAPPED:
 			{
-				final LuaThread t = (LuaThread)env;
+				final LuaThread t = (LuaThread)_env;
 				final Varargs result = t.resume(args);
 				if(result.arg1().toboolean())
 				    return result.subargs(2);

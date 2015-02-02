@@ -77,7 +77,7 @@ public class LibMath extends LibFunction1
 		        "atan2", "pow", });
 		((MathLibV)t.get("randomseed")).mathlib = this;
 		((MathLibV)t.get("random")).mathlib = this;
-		env.set("math", t);
+		_env.set("math", t);
 		LibPackage.instance.LOADED.set("math", t);
 		return t;
 	}

@@ -30,8 +30,6 @@ import org.luaj.vm2.lib.LibDebug;
  * {@link OrphanedThread} which is an {@link Error}.
  * Applications should not catch {@link OrphanedThread}, because it can break
  * the thread safety of luaj.
- *
- * @see LuaValue
  */
 public class LuaThread extends LuaValue
 {
@@ -245,7 +243,7 @@ public class LuaThread extends LuaValue
 		return state.lua_resume(this, args);
 	}
 
-	static class State implements Runnable
+	private static class State implements Runnable
 	{
 		final WeakReference<LuaThread> lua_thread;
 		final LuaValue                 function;

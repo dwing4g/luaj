@@ -72,7 +72,7 @@ import org.luaj.vm2.LuaValue;
  * data it needs to and place it into the environment if needed.
  * In this case, it creates two function, 'sinh', and 'cosh', and puts
  * them into a global table called 'hyperbolic.'
- * It placed the library table into the globals via the {@link #env}
+ * It placed the library table into the globals via the {@link #_env}
  * local variable which corresponds to the globals that apply when the
  * library is loaded.
  * <p>
@@ -101,7 +101,7 @@ import org.luaj.vm2.LuaValue;
  * See the source code in any of the library functions
  * such as {@link LibBase} or {@link LibTable} for other examples.
  */
-abstract public class LibFunction extends LuaFunction
+public abstract class LibFunction extends LuaFunction
 {
 	/** User-defined opcode to differentiate between instances of the library function class.
 	 * <p>
@@ -161,7 +161,7 @@ abstract public class LibFunction extends LuaFunction
 				LibFunction f = (LibFunction)factory.newInstance();
 				f._opcode = firstopcode + i;
 				f._name = names[i];
-				f.env = env;
+				f._env = env;
 				env.set(f._name, f);
 			}
 		}

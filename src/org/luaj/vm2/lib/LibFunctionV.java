@@ -25,7 +25,7 @@ import org.luaj.vm2.Varargs;
  * @see LibFunction2
  * @see LibFunction3
  */
-abstract public class LibFunctionV extends LibFunction
+public abstract class LibFunctionV extends LibFunction
 {
 	public LibFunctionV()
 	{
@@ -33,7 +33,7 @@ abstract public class LibFunctionV extends LibFunction
 
 	public LibFunctionV(LuaValue env)
 	{
-		this.env = env;
+		_env = env;
 	}
 
 	@Override
@@ -74,7 +74,7 @@ abstract public class LibFunctionV extends LibFunction
 		LuaThread.CallStack cs = LuaThread.onCall(this);
 		try
 		{
-			return this.onInvoke(args).eval();
+			return onInvoke(args).eval();
 		}
 		finally
 		{

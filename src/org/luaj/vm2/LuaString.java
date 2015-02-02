@@ -30,10 +30,6 @@ import org.luaj.vm2.lib.LibString;
  * {@link LuaString#encodeToUtf8(char[], byte[], int)}, and
  * {@link LuaString#decodeAsUtf8(byte[], int, int)
  * are used to convert back and forth between UTF8 byte arrays and character arrays.
- *
- * @see LuaValue
- * @see LuaValue#valueOf(String)
- * @see LuaValue#valueOf(byte[])
  */
 public class LuaString extends LuaValue
 {

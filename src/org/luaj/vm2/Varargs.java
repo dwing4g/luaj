@@ -6,7 +6,6 @@ package org.luaj.vm2;
  * To construct varargs, use one of the static methods such as
  * {@code LuaValue.varargsOf(LuaValue,LuaValue)}
  * <p>
- * <p>
  * Any LuaValue can be used as a stand-in for Varargs, for both calls and return values.
  * When doing so, nargs() will return 1 and arg1() or arg(1) will return this.
  * This simplifies the case when calling or implementing varargs functions with only
@@ -27,19 +26,10 @@ package org.luaj.vm2;
 public abstract class Varargs
 {
 	/**
-	 * Get the n-th argument value (1-based).
-	 * @param i the index of the argument to get, 1 is the first argument
-	 * @return Value at position i, or LuaValue.NIL if there is none.
-	 * @see Varargs#arg1()
-	 * @see LuaValue#NIL
-	 */
-	abstract public LuaValue arg(int i);
-
-	/**
 	 * Get the number of arguments, or 0 if there are none.
 	 * @return number of arguments.
 	 */
-	abstract public int narg();
+	public abstract int narg();
 
 	/**
 	 * Get the first argument in the list.
@@ -47,7 +37,16 @@ public abstract class Varargs
 	 * @see Varargs#arg(int)
 	 * @see LuaValue#NIL
 	 */
-	abstract public LuaValue arg1();
+	public abstract LuaValue arg1();
+
+	/**
+	 * Get the n-th argument value (1-based).
+	 * @param i the index of the argument to get, 1 is the first argument
+	 * @return Value at position i, or LuaValue.NIL if there is none.
+	 * @see Varargs#arg1()
+	 * @see LuaValue#NIL
+	 */
+	public abstract LuaValue arg(int i);
 
 	/**
 	 * Evaluate any pending tail call and return result.
@@ -72,81 +71,6 @@ public abstract class Varargs
 	// utilities to get specific arguments and type-check them.
 	// -----------------------------------------------------------------------
 
-	/** Gets the type of argument {@code i}
-	 * @param i the index of the argument to convert, 1 is the first argument
-	 * @return int value corresponding to one of the LuaValue integer type values
-	 * @see LuaValue.TNIL
-	 * @see LuaValue.TBOOLEAN
-	 * @see LuaValue.TNUMBER
-	 * @see LuaValue.TSTRING
-	 * @see LuaValue.TTABLE
-	 * @see LuaValue.TFUNCTION
-	 * @see LuaValue.TUSERDATA
-	 * @see LuaValue.TTHREAD
-	 * */
-	public int type(int i)
-	{
-		return arg(i).type();
-	}
-
-	/** Tests if argument i is nil.
-	 * @param i the index of the argument to test, 1 is the first argument
-	 * @return true if the argument is nil or does not exist, false otherwise
-	 * @see LuaValue.TNIL
-	 * */
-	public boolean isnil(int i)
-	{
-		return arg(i).isnil();
-	}
-
-	/** Tests if argument i is a function.
-	 * @param i the index of the argument to test, 1 is the first argument
-	 * @return true if the argument exists and is a function or closure, false otherwise
-	 * @see LuaValue.TFUNCTION
-	 * */
-	public boolean isfunction(int i)
-	{
-		return arg(i).isfunction();
-	}
-
-	/** Tests if argument i is a number.
-	 * Since anywhere a number is required, a string can be used that
-	 * is a number, this will return true for both numbers and
-	 * strings that can be interpreted as numbers.
-	 * @param i the index of the argument to test, 1 is the first argument
-	 * @return true if the argument exists and is a number or
-	 * string that can be interpreted as a number, false otherwise
-	 * @see LuaValue.TNUMBER
-	 * @see LuaValue.TSTRING
-	 * */
-	public boolean isnumber(int i)
-	{
-		return arg(i).isnumber();
-	}
-
-	/** Tests if argument i is a string.
-	 * Since all lua numbers can be used where strings are used,
-	 * this will return true for both strings and numbers.
-	 * @param i the index of the argument to test, 1 is the first argument
-	 * @return true if the argument exists and is a string or number, false otherwise
-	 * @see LuaValue.TNUMBER
-	 * @see LuaValue.TSTRING
-	 * */
-	public boolean isstring(int i)
-	{
-		return arg(i).isstring();
-	}
-
-	/** Tests if argument i is a table.
-	 * @param i the index of the argument to test, 1 is the first argument
-	 * @return true if the argument exists and is a lua table, false otherwise
-	 * @see LuaValue.TTABLE
-	 * */
-	public boolean istable(int i)
-	{
-		return arg(i).istable();
-	}
-
 	/** Tests if argument i is a thread.
 	 * @param i the index of the argument to test, 1 is the first argument
 	 * @return true if the argument exists and is a lua thread, false otherwise
@@ -157,16 +81,6 @@ public abstract class Varargs
 		return arg(i).isthread();
 	}
 
-	/** Tests if argument i is a userdata.
-	 * @param i the index of the argument to test, 1 is the first argument
-	 * @return true if the argument exists and is a userdata, false otherwise
-	 * @see LuaValue.TUSERDATA
-	 * */
-	public boolean isuserdata(int i)
-	{
-		return arg(i).isuserdata();
-	}
-
 	/** Tests if a value exists at argument i.
 	 * @param i the index of the argument to test, 1 is the first argument
 	 * @return true if the argument exists, false otherwise
@@ -174,46 +88,6 @@ public abstract class Varargs
 	public boolean isvalue(int i)
 	{
 		return i > 0 && i <= narg();
-	}
-
-	/** Return argument i as a boolean value, {@code defval} if nil, or throw a LuaError if any other type.
-	 * @param i the index of the argument to test, 1 is the first argument
-	 * @return true if argument i is boolean true, false if it is false, or defval if not supplied or nil
-	 * @exception LuaError if the argument is not a lua boolean
-	 * */
-	public boolean optboolean(int i, boolean defval)
-	{
-		return arg(i).optboolean(defval);
-	}
-
-	/** Return argument i as a closure, {@code defval} if nil, or throw a LuaError if any other type.
-	 * @param i the index of the argument to test, 1 is the first argument
-	 * @return LuaClosure if argument i is a closure, or defval if not supplied or nil
-	 * @exception LuaError if the argument is not a lua closure
-	 * */
-	public LuaClosure optclosure(int i, LuaClosure defval)
-	{
-		return arg(i).optclosure(defval);
-	}
-
-	/** Return argument i as a double, {@code defval} if nil, or throw a LuaError if it cannot be converted to one.
-	 * @param i the index of the argument to test, 1 is the first argument
-	 * @return java double value if argument i is a number or string that converts to a number, or defval if not supplied or nil
-	 * @exception LuaError if the argument is not a number
-	 * */
-	public double optdouble(int i, double defval)
-	{
-		return arg(i).optdouble(defval);
-	}
-
-	/** Return argument i as a function, {@code defval} if nil, or throw a LuaError  if an incompatible type.
-	 * @param i the index of the argument to test, 1 is the first argument
-	 * @return LuaValue that can be called if argument i is lua function or closure, or defval if not supplied or nil
-	 * @exception LuaError if the argument is not a lua function or closure
-	 * */
-	public LuaFunction optfunction(int i, LuaFunction defval)
-	{
-		return arg(i).optfunction(defval);
 	}
 
 	/** Return argument i as a java int value, discarding any fractional part, {@code defval} if nil, or throw a LuaError  if not a number.
@@ -226,36 +100,6 @@ public abstract class Varargs
 		return arg(i).optint(defval);
 	}
 
-	/** Return argument i as a java int value, {@code defval} if nil, or throw a LuaError  if not a number or is not representable by a java int.
-	 * @param i the index of the argument to test, 1 is the first argument
-	 * @return LuaInteger value that fits in a java int without rounding, or defval if not supplied or nil
-	 * @exception LuaError if the argument cannot be represented by a java int value
-	 * */
-	public LuaInteger optinteger(int i, LuaInteger defval)
-	{
-		return arg(i).optinteger(defval);
-	}
-
-	/** Return argument i as a java long value, discarding any fractional part, {@code defval} if nil, or throw a LuaError  if not a number.
-	 * @param i the index of the argument to test, 1 is the first argument
-	 * @return long value with fraction discarded and truncated if necessary if argument i is number, or defval if not supplied or nil
-	 * @exception LuaError if the argument is not a number
-	 * */
-	public long optlong(int i, long defval)
-	{
-		return arg(i).optlong(defval);
-	}
-
-	/** Return argument i as a LuaNumber, {@code defval} if nil, or throw a LuaError  if not a number or string that can be converted to a number.
-	 * @param i the index of the argument to test, 1 is the first argument, or defval if not supplied or nil
-	 * @return LuaNumber if argument i is number or can be converted to a number
-	 * @exception LuaError if the argument is not a number
-	 * */
-	public LuaNumber optnumber(int i, LuaNumber defval)
-	{
-		return arg(i).optnumber(defval);
-	}
-
 	/** Return argument i as a java String if a string or number, {@code defval} if nil, or throw a LuaError  if any other type
 	 * @param i the index of the argument to test, 1 is the first argument
 	 * @return String value if argument i is a string or number, or defval if not supplied or nil
@@ -264,88 +108,6 @@ public abstract class Varargs
 	public String optjstring(int i, String defval)
 	{
 		return arg(i).optjstring(defval);
-	}
-
-	/** Return argument i as a LuaString if a string or number, {@code defval} if nil, or throw a LuaError  if any other type
-	 * @param i the index of the argument to test, 1 is the first argument
-	 * @return LuaString value if argument i is a string or number, or defval if not supplied or nil
-	 * @exception LuaError if the argument is not a string or number
-	 * */
-	public LuaString optstring(int i, LuaString defval)
-	{
-		return arg(i).optstring(defval);
-	}
-
-	/** Return argument i as a LuaTable if a lua table, {@code defval} if nil, or throw a LuaError  if any other type.
-	 * @param i the index of the argument to test, 1 is the first argument
-	 * @return LuaTable value if a table, or defval if not supplied or nil
-	 * @exception LuaError if the argument is not a lua table
-	 * */
-	public LuaTable opttable(int i, LuaTable defval)
-	{
-		return arg(i).opttable(defval);
-	}
-
-	/** Return argument i as a LuaThread if a lua thread, {@code defval} if nil, or throw a LuaError  if any other type.
-	 * @param i the index of the argument to test, 1 is the first argument
-	 * @return LuaThread value if a thread, or defval if not supplied or nil
-	 * @exception LuaError if the argument is not a lua thread
-	 * */
-	public LuaThread optthread(int i, LuaThread defval)
-	{
-		return arg(i).optthread(defval);
-	}
-
-	/** Return argument i as a java Object if a userdata, {@code defval} if nil, or throw a LuaError  if any other type.
-	 * @param i the index of the argument to test, 1 is the first argument
-	 * @return java Object value if argument i is a userdata, or defval if not supplied or nil
-	 * @exception LuaError if the argument is not a userdata
-	 * */
-	public Object optuserdata(int i, Object defval)
-	{
-		return arg(i).optuserdata(defval);
-	}
-
-	/** Return argument i as a java Object if it is a userdata whose instance Class c or a subclass,
-	 * {@code defval} if nil, or throw a LuaError  if any other type.
-	 * @param i the index of the argument to test, 1 is the first argument
-	 * @param c the class to which the userdata instance must be assignable
-	 * @return java Object value if argument i is a userdata whose instance Class c or a subclass, or defval if not supplied or nil
-	 * @exception LuaError if the argument is not a userdata or from whose instance c is not assignable
-	 * */
-	public Object optuserdata(int i, Class<?> c, Object defval)
-	{
-		return arg(i).optuserdata(c, defval);
-	}
-
-	/** Return argument i as a LuaValue if it exists, or {@code defval}.
-	 * @param i the index of the argument to test, 1 is the first argument
-	 * @return LuaValue value if the argument exists, defval if not
-	 * @exception LuaError if the argument does not exist.
-	 * */
-	public LuaValue optvalue(int i, LuaValue defval)
-	{
-		return i > 0 && i <= narg() ? arg(i) : defval;
-	}
-
-	/** Return argument i as a boolean value, or throw an error if any other type.
-	 * @param i the index of the argument to test, 1 is the first argument
-	 * @return true if argument i is boolean true, false if it is false
-	 * @exception LuaError if the argument is not a lua boolean
-	 * */
-	public boolean checkboolean(int i)
-	{
-		return arg(i).checkboolean();
-	}
-
-	/** Return argument i as a closure, or throw an error if any other type.
-	 * @param i the index of the argument to test, 1 is the first argument
-	 * @return LuaClosure if argument i is a closure.
-	 * @exception LuaError if the argument is not a lua closure
-	 * */
-	public LuaClosure checkclosure(int i)
-	{
-		return arg(i).checkclosure();
 	}
 
 	/** Return argument i as a double, or throw an error if it cannot be converted to one.
@@ -378,16 +140,6 @@ public abstract class Varargs
 		return arg(i).checknumber().toint();
 	}
 
-	/** Return argument i as a java int value, or throw an error if not a number or is not representable by a java int.
-	 * @param i the index of the argument to test, 1 is the first argument
-	 * @return LuaInteger value that fits in a java int without rounding
-	 * @exception LuaError if the argument cannot be represented by a java int value
-	 * */
-	public LuaInteger checkinteger(int i)
-	{
-		return arg(i).checkinteger();
-	}
-
 	/** Return argument i as a java long value, discarding any fractional part, or throw an error if not a number.
 	 * @param i the index of the argument to test, 1 is the first argument
 	 * @return long value with fraction discarded and truncated if necessary if argument i is number
@@ -396,16 +148,6 @@ public abstract class Varargs
 	public long checklong(int i)
 	{
 		return arg(i).checknumber().tolong();
-	}
-
-	/** Return argument i as a LuaNumber, or throw an error if not a number or string that can be converted to a number.
-	 * @param i the index of the argument to test, 1 is the first argument
-	 * @return LuaNumber if argument i is number or can be converted to a number
-	 * @exception LuaError if the argument is not a number
-	 * */
-	public LuaNumber checknumber(int i)
-	{
-		return arg(i).checknumber();
 	}
 
 	/** Return argument i as a java String if a string or number, or throw an error if any other type
@@ -458,18 +200,6 @@ public abstract class Varargs
 		return arg(i).checkuserdata();
 	}
 
-	/** Return argument i as a java Object if it is a userdata whose instance Class c or a subclass,
-	 * or throw an error if any other type.
-	 * @param i the index of the argument to test, 1 is the first argument
-	 * @param c the class to which the userdata instance must be assignable
-	 * @return java Object value if argument i is a userdata whose instance Class c or a subclass
-	 * @exception LuaError if the argument is not a userdata or from whose instance c is not assignable
-	 * */
-	public Object checkuserdata(int i, Class<?> c)
-	{
-		return arg(i).checkuserdata(c);
-	}
-
 	/** Return argument i as a LuaValue if it exists, or throw an error.
 	 * @param i the index of the argument to test, 1 is the first argument
 	 * @return LuaValue value if the argument exists
@@ -478,16 +208,6 @@ public abstract class Varargs
 	public LuaValue checkvalue(int i)
 	{
 		return i <= narg() ? arg(i) : LuaValue.argerror(i, "value expected");
-	}
-
-	/** Return argument i as a LuaValue if it is not nil, or throw an error if it is nil.
-	 * @param i the index of the argument to test, 1 is the first argument
-	 * @return LuaValue value if the argument is not nil
-	 * @exception LuaError if the argument doesn't exist or evaluates to nil.
-	 * */
-	public LuaValue checknotnil(int i)
-	{
-		return arg(i).checknotnil();
 	}
 
 	/** Return argument i as a LuaValue when a user-supplied assertion passes, or throw an error.
@@ -509,112 +229,6 @@ public abstract class Varargs
 	public boolean isnoneornil(int i)
 	{
 		return i > narg() || arg(i).isnil();
-	}
-
-	/** Convert argument {@code i} to java boolean based on lua rules for boolean evaluation.
-	 * @param i the index of the argument to convert, 1 is the first argument
-	 * @return {@code false} if argument i is nil or false, otherwise {@code true}
-	 * */
-	public boolean toboolean(int i)
-	{
-		return arg(i).toboolean();
-	}
-
-	/** Return argument i as a java byte value, discarding any fractional part and truncating,
-	 * or 0 if not a number.
-	 * @param i the index of the argument to convert, 1 is the first argument
-	 * @return byte value with fraction discarded and truncated if necessary if argument i is number, otherwise 0
-	 * */
-	public byte tobyte(int i)
-	{
-		return arg(i).tobyte();
-	}
-
-	/** Return argument i as a java char value, discarding any fractional part and truncating,
-	 * or 0 if not a number.
-	 * @param i the index of the argument to convert, 1 is the first argument
-	 * @return char value with fraction discarded and truncated if necessary if argument i is number, otherwise 0
-	 * */
-	public char tochar(int i)
-	{
-		return arg(i).tochar();
-	}
-
-	/** Return argument i as a java double value or 0 if not a number.
-	 * @param i the index of the argument to convert, 1 is the first argument
-	 * @return double value if argument i is number, otherwise 0
-	 * */
-	public double todouble(int i)
-	{
-		return arg(i).todouble();
-	}
-
-	/** Return argument i as a java float value, discarding excess fractional part and truncating,
-	 * or 0 if not a number.
-	 * @param i the index of the argument to convert, 1 is the first argument
-	 * @return float value with excess fraction discarded and truncated if necessary if argument i is number, otherwise 0
-	 * */
-	public float tofloat(int i)
-	{
-		return arg(i).tofloat();
-	}
-
-	/** Return argument i as a java int value, discarding any fractional part and truncating,
-	 * or 0 if not a number.
-	 * @param i the index of the argument to convert, 1 is the first argument
-	 * @return int value with fraction discarded and truncated if necessary if argument i is number, otherwise 0
-	 * */
-	public int toint(int i)
-	{
-		return arg(i).toint();
-	}
-
-	/** Return argument i as a java long value, discarding any fractional part and truncating,
-	 * or 0 if not a number.
-	 * @param i the index of the argument to convert, 1 is the first argument
-	 * @return long value with fraction discarded and truncated if necessary if argument i is number, otherwise 0
-	 * */
-	public long tolong(int i)
-	{
-		return arg(i).tolong();
-	}
-
-	/** Return argument i as a java String based on the type of the argument.
-	 * @param i the index of the argument to convert, 1 is the first argument
-	 * @return String value representing the type
-	 * */
-	public String tojstring(int i)
-	{
-		return arg(i).tojstring();
-	}
-
-	/** Return argument i as a java short value, discarding any fractional part and truncating,
-	 * or 0 if not a number.
-	 * @param i the index of the argument to convert, 1 is the first argument
-	 * @return short value with fraction discarded and truncated if necessary if argument i is number, otherwise 0
-	 * */
-	public short toshort(int i)
-	{
-		return arg(i).toshort();
-	}
-
-	/** Return argument i as a java Object if a userdata, or null.
-	 * @param i the index of the argument to convert, 1 is the first argument
-	 * @return java Object value if argument i is a userdata, otherwise null
-	 * */
-	public Object touserdata(int i)
-	{
-		return arg(i).touserdata();
-	}
-
-	/** Return argument i as a java Object if it is a userdata whose instance Class c or a subclass, or null.
-	 * @param i the index of the argument to convert, 1 is the first argument
-	 * @param c the class to which the userdata instance must be assignable
-	 * @return java Object value if argument i is a userdata whose instance Class c or a subclass, otherwise null
-	 * */
-	public Object touserdata(int i, Class<?> c)
-	{
-		return arg(i).touserdata(c);
 	}
 
 	/** Convert the list of varargs values to a human readable java String.
@@ -648,7 +262,7 @@ public abstract class Varargs
 	 * @param start the index from which to include arguments, where 1 is the first argument.
 	 * @return Varargs containing argument { start, start+1,  ... , narg-start-1 }
 	 */
-	public Varargs subargs(final int start)
+	public Varargs subargs(int start)
 	{
 		int end = narg();
 		switch(end - start)
@@ -694,7 +308,7 @@ public abstract class Varargs
 		@Override
 		public int narg()
 		{
-			return end + 1 - start;
+			return end - start + 1;
 		}
 	}
 }

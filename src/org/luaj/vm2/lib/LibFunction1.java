@@ -25,10 +25,10 @@ import org.luaj.vm2.Varargs;
  * @see LibFunction3
  * @see LibFunctionV
  */
-abstract public class LibFunction1 extends LibFunction
+public abstract class LibFunction1 extends LibFunction
 {
 	@Override
-	abstract public LuaValue call(LuaValue arg);
+	public abstract LuaValue call(LuaValue arg);
 
 	/** Default constructor */
 	public LibFunction1()
@@ -40,7 +40,7 @@ abstract public class LibFunction1 extends LibFunction
 	 */
 	public LibFunction1(LuaValue env)
 	{
-		this.env = env;
+		_env = env;
 	}
 
 	@Override

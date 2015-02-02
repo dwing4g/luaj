@@ -50,32 +50,32 @@ public class LibIo extends LibFunction1
 {
 	abstract protected class LuaFile extends LuaValue
 	{
-		abstract public void write(LuaString string) throws IOException;
+		public abstract void write(LuaString string) throws IOException;
 
-		abstract public void flush() throws IOException;
+		public abstract void flush() throws IOException;
 
-		abstract public boolean isstdfile();
+		public abstract boolean isstdfile();
 
-		abstract public void close() throws IOException;
+		public abstract void close() throws IOException;
 
-		abstract public boolean isclosed();
+		public abstract boolean isclosed();
 
 		// returns new position
-		abstract public int seek(String option, int bytecount) throws IOException;
+		public abstract int seek(String option, int bytecount) throws IOException;
 
-		abstract public void setvbuf(String mode, int size);
+		public abstract void setvbuf(String mode, int size);
 
 		// get length remaining to read
-		abstract public int remaining() throws IOException;
+		public abstract int remaining() throws IOException;
 
 		// peek ahead one character
-		abstract public int peek() throws IOException, EOFException;
+		public abstract int peek() throws IOException, EOFException;
 
 		// return char if read, -1 if eof, throw IOException on other exception
-		abstract public int read() throws IOException, EOFException;
+		public abstract int read() throws IOException, EOFException;
 
 		// return number of bytes read if positive, false if eof, throw IOException on other exception
-		abstract public int read(byte[] bytes, int offset, int length) throws IOException;
+		public abstract int read(byte[] bytes, int offset, int length) throws IOException;
 
 		// delegate method access to file methods table
 		@Override
@@ -171,7 +171,6 @@ public class LibIo extends LibFunction1
 	@Override
 	public LuaValue call(LuaValue arg)
 	{
-
 		// io lib functions
 		LuaTable t = new LuaTable();
 		bind(t, IoLibV.class, IO_NAMES);
@@ -191,7 +190,7 @@ public class LibIo extends LibFunction1
 		setLibInstance(mt);
 
 		// return the table
-		env.set("io", t);
+		_env.set("io", t);
 		LibPackage.instance.LOADED.set("io", t);
 		return t;
 	}
@@ -200,12 +199,12 @@ public class LibIo extends LibFunction1
 	{
 		List<LuaValue> k = t.keys();
 		for(int i = 0, n = k.size(); i < n; i++)
-			((IoLibV)t.get(k.get(i))).iolib = this;
+			((IoLibV)t.get(k.get(i)))._iolib = this;
 	}
 
 	static final class IoLibV extends LibFunctionV
 	{
-		public LibIo iolib;
+		public LibIo _iolib;
 
 		public IoLibV()
 		{
@@ -213,11 +212,10 @@ public class LibIo extends LibFunction1
 
 		public IoLibV(LuaValue env, String name, int opcode, LibIo iolib)
 		{
-			super();
-			this.env = env;
-			this._name = name;
-			this._opcode = opcode;
-			this.iolib = iolib;
+			_env = env;
+			_name = name;
+			_opcode = opcode;
+			_iolib = iolib;
 		}
 
 		@Override
@@ -228,27 +226,27 @@ public class LibIo extends LibFunction1
 				switch(_opcode)
 				{
 					case IO_FLUSH:
-						return iolib._io_flush();
+						return _iolib._io_flush();
 					case IO_TMPFILE:
-						return iolib._io_tmpfile();
+						return _iolib._io_tmpfile();
 					case IO_CLOSE:
-						return iolib._io_close(args.arg1());
+						return _iolib._io_close(args.arg1());
 					case IO_INPUT:
-						return iolib._io_input(args.arg1());
+						return _iolib._io_input(args.arg1());
 					case IO_OUTPUT:
-						return iolib._io_output(args.arg1());
+						return _iolib._io_output(args.arg1());
 					case IO_TYPE:
 						return LibIo._io_type(args.arg1());
 					case IO_POPEN:
-						return iolib._io_popen(args.checkjstring(1), args.optjstring(2, "r"));
+						return _iolib._io_popen(args.checkjstring(1), args.optjstring(2, "r"));
 					case IO_OPEN:
-						return iolib._io_open(args.checkjstring(1), args.optjstring(2, "r"));
+						return _iolib._io_open(args.checkjstring(1), args.optjstring(2, "r"));
 					case IO_LINES:
-						return iolib._io_lines(args.isvalue(1) ? args.checkjstring(1) : null);
+						return _iolib._io_lines(args.isvalue(1) ? args.checkjstring(1) : null);
 					case IO_READ:
-						return iolib._io_read(args);
+						return _iolib._io_read(args);
 					case IO_WRITE:
-						return iolib._io_write(args);
+						return _iolib._io_write(args);
 					case FILE_CLOSE:
 						return LibIo._file_close(args.arg1());
 					case FILE_FLUSH:
@@ -256,7 +254,7 @@ public class LibIo extends LibFunction1
 					case FILE_SETVBUF:
 						return LibIo._file_setvbuf(args.arg1(), args.checkjstring(2), args.optint(3, 1024));
 					case FILE_LINES:
-						return iolib._file_lines(args.arg1());
+						return _iolib._file_lines(args.arg1());
 					case FILE_READ:
 						return LibIo._file_read(args.arg1(), args.subargs(2));
 					case FILE_SEEK:
@@ -264,9 +262,9 @@ public class LibIo extends LibFunction1
 					case FILE_WRITE:
 						return LibIo._file_write(args.arg1(), args.subargs(2));
 					case IO_INDEX:
-						return iolib._io_index(args.arg(2));
+						return _iolib._io_index(args.arg(2));
 					case LINES_ITER:
-						return LibIo._lines_iter(env);
+						return LibIo._lines_iter(_env);
 				}
 			}
 			catch(IOException ioe)
@@ -553,11 +551,7 @@ public class LibIo extends LibFunction1
 		boolean isstdfile = "-".equals(filename);
 		boolean isreadmode = mode.startsWith("r");
 		if(isstdfile)
-		{
-			return isreadmode ?
-			        wrapStdin() :
-			        wrapStdout();
-		}
+		    return isreadmode ? wrapStdin() : wrapStdout();
 		boolean isappend = mode.startsWith("a");
 		boolean isupdate = mode.indexOf("+") > 0;
 		boolean isbinary = mode.endsWith("b");
@@ -644,14 +638,11 @@ public class LibIo extends LibFunction1
 
 	private static void freadchars(LuaFile f, String chars, ByteArrayOutputStream baos) throws IOException
 	{
-		int c;
-		while(true)
+		for(;;)
 		{
-			c = f.peek();
+			int c = f.peek();
 			if(chars.indexOf(c) < 0)
-			{
-				return;
-			}
+			    return;
 			f.read();
 			if(baos != null)
 			    baos.write(c);
@@ -694,11 +685,8 @@ public class LibIo extends LibFunction1
 		RandomAccessFile f = new RandomAccessFile(filename, readMode ? "r" : "rw");
 		if(appendMode)
 			f.seek(f.length());
-		else
-		{
-			if(!readMode)
-			    f.setLength(0);
-		}
+		else if(!readMode)
+		    f.setLength(0);
 		return new LuaFileImpl(f);
 	}
 

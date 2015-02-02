@@ -23,35 +23,17 @@ import org.luaj.vm2.lib.LibMath;
  * <li>{@link #dmod(double, double)}</li>
  * <li>{@link #dmod_d(double, double)}</li>
  * </ul>
- * <p>
- * @see LuaValue
- * @see LuaNumber
- * @see LuaInteger
- * @see LuaValue#valueOf(int)
- * @see LuaValue#valueOf(double)
  */
-public class LuaDouble extends LuaNumber
+public final class LuaDouble extends LuaNumber
 {
-	/** Constant LuaDouble representing NaN (not a number) */
 	public static final LuaDouble NAN         = new LuaDouble(Double.NaN);
-
-	/** Constant LuaDouble representing positive infinity */
 	public static final LuaDouble POSINF      = new LuaDouble(Double.POSITIVE_INFINITY);
-
-	/** Constant LuaDouble representing negative infinity */
 	public static final LuaDouble NEGINF      = new LuaDouble(Double.NEGATIVE_INFINITY);
-
-	/** Constant String representation for NaN (not a number), "nan" */
 	public static final String    JSTR_NAN    = "nan";
-
-	/** Constant String representation for positive infinity, "inf" */
 	public static final String    JSTR_POSINF = "inf";
-
-	/** Constant String representation for negative infinity, "-inf" */
 	public static final String    JSTR_NEGINF = "-inf";
 
-	/** The value being held by this instance. */
-	final double                  v;
+	public final double           v;
 
 	public static LuaNumber valueOf(double d)
 	{
@@ -62,7 +44,7 @@ public class LuaDouble extends LuaNumber
 	/** Don't allow ints to be boxed by DoubleValues  */
 	private LuaDouble(double d)
 	{
-		this.v = d;
+		v = d;
 	}
 
 	@Override

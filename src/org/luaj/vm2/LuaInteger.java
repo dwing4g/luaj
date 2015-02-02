@@ -12,12 +12,6 @@ import org.luaj.vm2.lib.LibMath;
  * <p>
  * There are no API's specific to LuaInteger that are useful beyond what is already
  * exposed in {@link LuaValue}.
- *
- * @see LuaValue
- * @see LuaNumber
- * @see LuaDouble
- * @see LuaValue#valueOf(int)
- * @see LuaValue#valueOf(double)
  */
 public class LuaInteger extends LuaNumber
 {
@@ -52,10 +46,6 @@ public class LuaInteger extends LuaNumber
 	/** The value being held by this instance. */
 	public final int v;
 
-	/**
-	 * Package protected constructor.
-	 * @see LuaValue#valueOf(int)
-	 **/
 	LuaInteger(int i)
 	{
 		this.v = i;
@@ -566,5 +556,4 @@ public class LuaInteger extends LuaNumber
 	{
 		return valueOf(String.valueOf(v));
 	}
-
 }

@@ -13,13 +13,9 @@ package org.luaj.vm2;
  * the recommended approach is to use the method {@link LuaValue#isnil()}
  * instead.  By using that any ambiguities between
  * {@link LuaValue#NIL} and {@link LuaValue#NONE} are avoided.
- * @see LuaValue
- * @see LuaValue#NIL
  */
 public class LuaNil extends LuaValue
 {
-	static final LuaNil    _NIL = new LuaNil();
-
 	public static LuaValue s_metatable;
 
 	LuaNil()
@@ -86,7 +82,7 @@ public class LuaNil extends LuaValue
 		return typerror("table index");
 	}
 
-	// optional argument conversions - nil alwas falls badk to default value
+	// optional argument conversions - nil always falls back to default value
 	@Override
 	public boolean optboolean(boolean defval)
 	{

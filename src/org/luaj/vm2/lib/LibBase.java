@@ -82,20 +82,20 @@ public class LibBase extends LibFunction1
 	@Override
 	public LuaValue call(LuaValue arg)
 	{
-		env.set("_G", env);
-		env.set("_VERSION", Lua._VERSION);
-		bind(env, BaseLib2.class, LIB2_KEYS);
-		bind(env, BaseLibV.class, LIBV_KEYS);
+		_env.set("_G", _env);
+		_env.set("_VERSION", Lua._VERSION);
+		bind(_env, BaseLib2.class, LIB2_KEYS);
+		bind(_env, BaseLibV.class, LIBV_KEYS);
 
 		// remember next, and inext for use in pairs and ipairs
-		next = env.get("next");
-		inext = env.get("__inext");
+		next = _env.get("next");
+		inext = _env.get("__inext");
 
 		// inject base lib int vararg instances
 		for(int i = 0; i < LIBV_KEYS.length; i++)
-			((BaseLibV)env.get(LIBV_KEYS[i])).baselib = this;
+			((BaseLibV)_env.get(LIBV_KEYS[i])).baselib = this;
 
-		return env;
+		return _env;
 	}
 
 	static final class BaseLib2 extends LibFunction2
@@ -169,10 +169,10 @@ public class LibBase extends LibFunction1
 					return args;
 				case 1: // "dofile", // ( filename ) -> result1, ...
 				{
-					Varargs v = args.isnil(1) ?
+					Varargs v = args.arg1().isnil() ?
 					        LibBase.loadStream(System.in, "=stdin") :
 					        LibBase.loadFile(args.checkjstring(1));
-					return v.isnil(1) ? error(v.tojstring(2)) : v.arg1().invoke();
+					return v.arg1().isnil() ? error(v.arg(2).tojstring()) : v.arg1().invoke();
 				}
 				case 2: // "getfenv", // ( [f] ) -> env
 				{
@@ -208,7 +208,7 @@ public class LibBase extends LibFunction1
 				}
 				case 5: // "loadfile", // ( [filename] ) -> chunk | nil, msg
 				{
-					return args.isnil(1) ?
+					return args.arg1().isnil() ?
 					        LibBase.loadStream(System.in, "stdin") :
 					        LibBase.loadFile(args.checkjstring(1));
 				}
@@ -291,7 +291,7 @@ public class LibBase extends LibFunction1
 				case 15:
 				{ // "rawset", // (table, index, value) -> table
 					LuaTable t = args.checktable(1);
-					t.rawset(args.checknotnil(2), args.checkvalue(3));
+					t.rawset(args.arg(2).checknotnil(), args.checkvalue(3));
 					return t;
 				}
 				case 16:
