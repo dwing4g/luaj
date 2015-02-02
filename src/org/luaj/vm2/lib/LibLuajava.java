@@ -1,4 +1,4 @@
-package org.luaj.vm2.lib.jse;
+package org.luaj.vm2.lib;
 
 import java.lang.reflect.Array;
 import java.lang.reflect.InvocationHandler;
@@ -10,9 +10,6 @@ import org.luaj.vm2.LuaTable;
 import org.luaj.vm2.LuaValue;
 import org.luaj.vm2.Varargs;
 import org.luaj.vm2.compiler.LuaC;
-import org.luaj.vm2.lib.LibFunction;
-import org.luaj.vm2.lib.PackageLib;
-import org.luaj.vm2.lib.VarArgFunction;
 
 /**
  * Subclass of {@link LibFunction} which implements the features of the luajava package.
@@ -37,19 +34,18 @@ import org.luaj.vm2.lib.VarArgFunction;
  * 		"sys = luajava.bindClass('java.lang.System')\n"+
  * 		"print ( sys:currentTimeMillis() )\n" ) ).call();
  * } </pre>
- * This example is not intended to be realistic - only to show how the {@link LuajavaLib}
+ * This example is not intended to be realistic - only to show how the {@link LibLuajava}
  * may be initialized by hand.  In practice, the {@code luajava} library is available
  * on all JSE platforms via the call to {@link JsePlatform#standardGlobals()}
  * and the luajava api's are simply invoked from lua.
  * <p>
  * This has been implemented to match as closely as possible the behavior in the corresponding library in C.
  * @see LibFunction
- * @see org.luaj.vm2.lib.jse.JsePlatform
- * @see org.luaj.vm2.lib.jme.JmePlatform
+ * @see org.luaj.vm2.lib.JsePlatform
  * @see LuaC
  * @see <a href="http://www.keplerproject.org/luajava/manual.html#luareference">http://www.keplerproject.org/luajava/manual.html#luareference</a>
  */
-public class LuajavaLib extends VarArgFunction
+public class LibLuajava extends LibFunctionV
 {
 	static final int      INIT                     = 0;
 	static final int      BINDCLASS                = 1;
@@ -68,7 +64,7 @@ public class LuajavaLib extends VarArgFunction
 
 	static final int      METHOD_MODIFIERS_VARARGS = 0x80;
 
-	public LuajavaLib()
+	public LibLuajava()
 	{
 	}
 
@@ -82,9 +78,9 @@ public class LuajavaLib extends VarArgFunction
 				case INIT:
 				{
 					LuaTable t = new LuaTable();
-					bind(t, LuajavaLib.class, NAMES, BINDCLASS);
+					bind(t, LibLuajava.class, NAMES, BINDCLASS);
 					env.set("luajava", t);
-					PackageLib.instance.LOADED.set("luajava", t);
+					LibPackage.instance.LOADED.set("luajava", t);
 					return t;
 				}
 				case BINDCLASS:

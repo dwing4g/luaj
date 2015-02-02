@@ -15,30 +15,30 @@ import org.luaj.vm2.Varargs;
  * If more or less than two arguments are required,
  * or variable argument or variable return values,
  * then use one of the related function
- * {@link ZeroArgFunction}, {@link OneArgFunction}, {@link ThreeArgFunction}, or {@link VarArgFunction}.
+ * {@link LibFunction0}, {@link LibFunction1}, {@link LibFunction3}, or {@link LibFunctionV}.
  * <p>
  * See {@link LibFunction} for more information on implementation libraries and library functions.
  * @see #call(LuaValue,LuaValue)
  * @see LibFunction
- * @see ZeroArgFunction
- * @see OneArgFunction
- * @see ThreeArgFunction
- * @see VarArgFunction
+ * @see LibFunction0
+ * @see LibFunction1
+ * @see LibFunction3
+ * @see LibFunctionV
  */
-abstract public class TwoArgFunction extends LibFunction
+abstract public class LibFunction2 extends LibFunction
 {
 	@Override
 	abstract public LuaValue call(LuaValue arg1, LuaValue arg2);
 
 	/** Default constructor */
-	public TwoArgFunction()
+	public LibFunction2()
 	{
 	}
 
 	/** Constructor with specific environment
 	 * @param env The environment to apply during constructon.
 	 */
-	public TwoArgFunction(LuaValue env)
+	public LibFunction2(LuaValue env)
 	{
 		this.env = env;
 	}

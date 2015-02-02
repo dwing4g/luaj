@@ -2,7 +2,7 @@ package org.luaj.vm2;
 
 import org.luaj.vm2.LoadState.LuaCompiler;
 import org.luaj.vm2.compiler.LuaC;
-import org.luaj.vm2.lib.DebugLib;
+import org.luaj.vm2.lib.LibDebug;
 
 /**
  * Extension of {@link LuaFunction} which executes lua bytecode.
@@ -217,8 +217,8 @@ public class LuaClosure extends LuaFunction
 		    stack[p.numparams] = new LuaTable(varargs);
 
 		// debug wants args to this function
-		if(DebugLib.DEBUG_ENABLED)
-		    DebugLib.debugSetupCall(varargs, stack);
+		if(LibDebug.DEBUG_ENABLED)
+		    LibDebug.debugSetupCall(varargs, stack);
 
 		// process instructions
 		LuaThread.CallStack cs = LuaThread.onCall(this);
@@ -226,8 +226,8 @@ public class LuaClosure extends LuaFunction
 		{
 			while(true)
 			{
-				if(DebugLib.DEBUG_ENABLED)
-				    DebugLib.debugBytecode(pc, v, top);
+				if(LibDebug.DEBUG_ENABLED)
+				    LibDebug.debugBytecode(pc, v, top);
 
 				// pull out instruction
 				i = code[pc++];

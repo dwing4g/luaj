@@ -7,7 +7,7 @@ import org.luaj.vm2.LuaValue;
 /**
  * Subclass of {@link LuaFunction} common to Java functions exposed to lua.
  * <p>
- * To provide for common implementations in JME and JSE,
+ * To provide for common implementations in JSE,
  * library functions are typically grouped on one or more library classes
  * and an opcode per library function is defined and used to key the switch
  * to the correct function within the library.
@@ -22,11 +22,11 @@ import org.luaj.vm2.LuaValue;
  * there are 5 direct subclasses to handle common cases based on number of
  * argument values and number of return return values.
  * <ul>
- * <li>{@link ZeroArgFunction}</li>
- * <li>{@link OneArgFunction}</li>
- * <li>{@link TwoArgFunction}</li>
- * <li>{@link ThreeArgFunction}</li>
- * <li>{@link VarArgFunction}</li>
+ * <li>{@link LibFunction0}</li>
+ * <li>{@link LibFunction1}</li>
+ * <li>{@link LibFunction2}</li>
+ * <li>{@link LibFunction3}</li>
+ * <li>{@link LibFunctionV}</li>
  * </ul>
  * <p>
  * To be a Java library that can be loaded via {@code require}, it should have
@@ -99,7 +99,7 @@ import org.luaj.vm2.LuaValue;
  * }</pre>
  * <p>
  * See the source code in any of the library functions
- * such as {@link BaseLib} or {@link TableLib} for other examples.
+ * such as {@link LibBase} or {@link LibTable} for other examples.
  */
 abstract public class LibFunction extends LuaFunction
 {

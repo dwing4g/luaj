@@ -1,4 +1,4 @@
-package org.luaj.vm2.lib.jse;
+package org.luaj.vm2.lib;
 
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;

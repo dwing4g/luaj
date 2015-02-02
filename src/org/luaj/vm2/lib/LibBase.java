@@ -19,10 +19,7 @@ import org.luaj.vm2.Varargs;
  * This contains all library functions listed as "basic functions" in the lua documentation for JME.
  * The functions dofile and loadfile use the
  * {@link #FINDER} instance to find resource files.
- * The default loader chain in {@link PackageLib} will use these as well.
- * <p>
- * Typically, this library is included as part of a call to either
- * {@link JmePlatform#standardGlobals()}
+ * The default loader chain in {@link LibPackage} will use these as well.
  * <p>
  * To instantiate and use it directly,
  * link it into your globals table via {@link LuaValue#load(LuaValue)} using code such as:
@@ -39,7 +36,7 @@ import org.luaj.vm2.Varargs;
  * @see LibFunction
  * @see <a href="http://www.lua.org/manual/5.1/manual.html#5.1">http://www.lua.org/manual/5.1/manual.html#5.1</a>
  */
-public class BaseLib extends OneArgFunction
+public class LibBase extends LibFunction1
 {
 	private LuaValue              next;
 	private LuaValue              inext;
@@ -78,7 +75,7 @@ public class BaseLib extends OneArgFunction
 	/**
 	 * Construct a base libarary instance.
 	 */
-	public BaseLib()
+	public LibBase()
 	{
 	}
 
@@ -101,7 +98,7 @@ public class BaseLib extends OneArgFunction
 		return env;
 	}
 
-	static final class BaseLib2 extends TwoArgFunction
+	static final class BaseLib2 extends LibFunction2
 	{
 		@Override
 		public LuaValue call(LuaValue arg1, LuaValue arg2)
@@ -157,9 +154,9 @@ public class BaseLib extends OneArgFunction
 		return f;
 	}
 
-	static final class BaseLibV extends VarArgFunction
+	static final class BaseLibV extends LibFunctionV
 	{
-		public BaseLib baselib;
+		public LibBase baselib;
 
 		@Override
 		public Varargs invoke(Varargs args)
@@ -173,8 +170,8 @@ public class BaseLib extends OneArgFunction
 				case 1: // "dofile", // ( filename ) -> result1, ...
 				{
 					Varargs v = args.isnil(1) ?
-					        BaseLib.loadStream(System.in, "=stdin") :
-					        BaseLib.loadFile(args.checkjstring(1));
+					        LibBase.loadStream(System.in, "=stdin") :
+					        LibBase.loadFile(args.checkjstring(1));
 					return v.isnil(1) ? error(v.tojstring(2)) : v.arg1().invoke();
 				}
 				case 2: // "getfenv", // ( [f] ) -> env
@@ -195,7 +192,7 @@ public class BaseLib extends OneArgFunction
 					StringInputStream sis = new StringInputStream(func);
 					try
 					{
-						return BaseLib.loadStream(sis, chunkname);
+						return LibBase.loadStream(sis, chunkname);
 					}
 					finally
 					{
@@ -212,14 +209,14 @@ public class BaseLib extends OneArgFunction
 				case 5: // "loadfile", // ( [filename] ) -> chunk | nil, msg
 				{
 					return args.isnil(1) ?
-					        BaseLib.loadStream(System.in, "stdin") :
-					        BaseLib.loadFile(args.checkjstring(1));
+					        LibBase.loadStream(System.in, "stdin") :
+					        LibBase.loadFile(args.checkjstring(1));
 				}
 				case 6: // "loadstring", // ( string [,chunkname] ) -> chunk | nil, msg
 				{
 					LuaString script = args.checkstring(1);
 					String chunkname = args.optjstring(2, "string");
-					return BaseLib.loadStream(script.toInputStream(), chunkname);
+					return LibBase.loadStream(script.toInputStream(), chunkname);
 				}
 				case 7: // "pcall", // (f, arg1, ...) -> status, result1, ...
 				{
@@ -387,7 +384,7 @@ public class BaseLib extends OneArgFunction
 				}
 			}
 			if(is == null)
-			    is = BaseLib.class.getResourceAsStream(filename.startsWith("/") ? filename : "/" + filename);
+			    is = LibBase.class.getResourceAsStream(filename.startsWith("/") ? filename : "/" + filename);
 			if(is == null)
 			    return varargsOf(NIL, valueOf("cannot open " + filename + ": No such file or directory"));
 			return loadStream(is, "@" + filename);

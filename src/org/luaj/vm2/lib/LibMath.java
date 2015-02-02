@@ -29,9 +29,6 @@ import org.luaj.vm2.Varargs;
  * The implementations of {@code exp()} and {@code pow()} are constructed by
  * hand for JME, so will be slower and less accurate than when executed on the JSE platform.
  * <p>
- * Typically, this library is included as part of a call to either
- * {@link JmePlatform#standardGlobals()}
- * <p>
  * To instantiate and use it directly,
  * link it into your globals table via {@link LuaValue#load(LuaValue)} using code such as:
  * <pre> {@code
@@ -49,11 +46,11 @@ import org.luaj.vm2.Varargs;
  * @see LibFunction
  * @see <a href="http://www.lua.org/manual/5.1/manual.html#5.6">http://www.lua.org/manual/5.1/manual.html#5.6</a>
  */
-public class MathLib extends OneArgFunction
+public class LibMath extends LibFunction1
 {
 	private Random random;
 
-	public MathLib()
+	public LibMath()
 	{
 	}
 
@@ -81,11 +78,11 @@ public class MathLib extends OneArgFunction
 		((MathLibV)t.get("randomseed")).mathlib = this;
 		((MathLibV)t.get("random")).mathlib = this;
 		env.set("math", t);
-		PackageLib.instance.LOADED.set("math", t);
+		LibPackage.instance.LOADED.set("math", t);
 		return t;
 	}
 
-	public static final class JseMathLib1 extends OneArgFunction
+	public static final class JseMathLib1 extends LibFunction1
 	{
 		@Override
 		public LuaValue call(LuaValue arg)
@@ -115,7 +112,7 @@ public class MathLib extends OneArgFunction
 		}
 	}
 
-	public static final class JseMathLib2 extends TwoArgFunction
+	public static final class JseMathLib2 extends LibFunction2
 	{
 		@Override
 		public LuaValue call(LuaValue arg1, LuaValue arg2)
@@ -131,7 +128,7 @@ public class MathLib extends OneArgFunction
 		}
 	}
 
-	static final class MathLib1 extends OneArgFunction
+	static final class MathLib1 extends LibFunction1
 	{
 		@Override
 		public LuaValue call(LuaValue arg)
@@ -163,9 +160,9 @@ public class MathLib extends OneArgFunction
 		}
 	}
 
-	static final class MathLib2 extends TwoArgFunction
+	static final class MathLib2 extends LibFunction2
 	{
-		protected MathLib mathlib;
+		protected LibMath mathlib;
 
 		@Override
 		public LuaValue call(LuaValue arg1, LuaValue arg2)
@@ -199,12 +196,12 @@ public class MathLib extends OneArgFunction
 	/** compute power using installed math library, or default if there is no math library installed */
 	public static LuaValue dpow(double a, double b)
 	{
-		return LuaDouble.valueOf(MathLib.dpow_lib(a, b));
+		return LuaDouble.valueOf(LibMath.dpow_lib(a, b));
 	}
 
 	public static double dpow_d(double a, double b)
 	{
-		return MathLib.dpow_lib(a, b);
+		return LibMath.dpow_lib(a, b);
 	}
 
 	/**
@@ -215,9 +212,9 @@ public class MathLib extends OneArgFunction
 		return Math.pow(a, b);
 	}
 
-	static final class MathLibV extends VarArgFunction
+	static final class MathLibV extends LibFunctionV
 	{
-		protected MathLib mathlib;
+		protected LibMath mathlib;
 
 		@Override
 		public Varargs invoke(Varargs args)

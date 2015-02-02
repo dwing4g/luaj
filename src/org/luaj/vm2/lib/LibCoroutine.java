@@ -4,7 +4,6 @@ import org.luaj.vm2.LuaTable;
 import org.luaj.vm2.LuaThread;
 import org.luaj.vm2.LuaValue;
 import org.luaj.vm2.Varargs;
-import org.luaj.vm2.lib.jse.JsePlatform;
 
 /**
  * Subclass of {@link LibFunction} which implements the lua standard {@code coroutine}
@@ -17,8 +16,7 @@ import org.luaj.vm2.lib.jse.JsePlatform;
  * However, coroutines that are yielded but never resumed to complete their execution
  * may not be collected by the garbage collector.
  * <p>
- * Typically, this library is included as part of a call to either
- * {@link JsePlatform#standardGlobals()} or {@link JmePlatform#standardGlobals()}
+ * Typically, this library is included as part of a call to {@link JsePlatform#standardGlobals()}
  * <p>
  * To instantiate and use it directly,
  * link it into your globals table via {@link LuaValue#load(LuaValue)} using code such as:
@@ -32,7 +30,7 @@ import org.luaj.vm2.lib.jse.JsePlatform;
  * @see LibFunction
  * @see <a href="http://www.lua.org/manual/5.1/manual.html#5.2">http://www.lua.org/manual/5.1/manual.html#5.2</a>
  */
-public class CoroutineLib extends VarArgFunction
+public class LibCoroutine extends LibFunctionV
 {
 	private static final int INIT    = 0;
 	private static final int CREATE  = 1;
@@ -43,18 +41,18 @@ public class CoroutineLib extends VarArgFunction
 	private static final int WRAP    = 6;
 	private static final int WRAPPED = 7;
 
-	public CoroutineLib()
+	public LibCoroutine()
 	{
 	}
 
 	private LuaTable init()
 	{
 		LuaTable t = new LuaTable();
-		bind(t, CoroutineLib.class, new String[] {
+		bind(t, LibCoroutine.class, new String[] {
 		        "create", "resume", "running", "status", "yield", "wrap" },
 		        CREATE);
 		env.set("coroutine", t);
-		PackageLib.instance.LOADED.set("coroutine", t);
+		LibPackage.instance.LOADED.set("coroutine", t);
 		return t;
 	}
 
@@ -94,7 +92,7 @@ public class CoroutineLib extends VarArgFunction
 			{
 				final LuaValue func = args.checkfunction(1);
 				final LuaThread thread = new LuaThread(func, func.getfenv());
-				CoroutineLib cl = new CoroutineLib();
+				LibCoroutine cl = new LibCoroutine();
 				cl.setfenv(thread);
 				cl._name = "wrapped";
 				cl._opcode = WRAPPED;

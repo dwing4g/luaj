@@ -16,7 +16,6 @@ import org.luaj.vm2.LuaValue;
 import org.luaj.vm2.Print;
 import org.luaj.vm2.Prototype;
 import org.luaj.vm2.Varargs;
-import org.luaj.vm2.lib.jse.JsePlatform;
 
 /**
  * Subclass of {@link LibFunction} which implements the lua standard {@code debug}
@@ -29,8 +28,7 @@ import org.luaj.vm2.lib.jse.JsePlatform;
  * via a {@link LuaCompiler} such as {@link LuaJC},
  * this cannot be done in all cases.
  * <p>
- * Typically, this library is included as part of a call to either
- * {@link JsePlatform#debugGlobals()} or {@link JmePlatform#debugGlobals()}
+ * Typically, this library is included as part of a call to {@link JsePlatform#debugGlobals()}
  * <p>
  * To instantiate and use it directly,
  * link it into your globals table via {@link LuaValue#load(LuaValue)} using code such as:
@@ -44,7 +42,7 @@ import org.luaj.vm2.lib.jse.JsePlatform;
  * @see LibFunction
  * @see <a href="http://www.lua.org/manual/5.1/manual.html#5.9">http://www.lua.org/manual/5.1/manual.html#5.9</a>
  */
-public class DebugLib extends VarArgFunction
+public class LibDebug extends LibFunctionV
 {
 	public static final boolean    CALLS           = (System.getProperty("CALLS") != null);
 	public static final boolean    TRACE           = (System.getProperty("TRACE") != null);
@@ -115,7 +113,7 @@ public class DebugLib extends VarArgFunction
 	private static final LuaString CURRENTLINE     = valueOf("currentline");
 	private static final LuaString ACTIVELINES     = valueOf("activelines");
 
-	public DebugLib()
+	public LibDebug()
 	{
 	}
 
@@ -123,9 +121,9 @@ public class DebugLib extends VarArgFunction
 	{
 		DEBUG_ENABLED = true;
 		LuaTable t = new LuaTable();
-		bind(t, DebugLib.class, NAMES, DEBUG);
+		bind(t, LibDebug.class, NAMES, DEBUG);
 		env.set("debug", t);
-		PackageLib.instance.LOADED.set("debug", t);
+		LibPackage.instance.LOADED.set("debug", t);
 		return t;
 	}
 
@@ -380,7 +378,7 @@ public class DebugLib extends VarArgFunction
 		public String tojstring()
 		{
 			LuaThread thread = thread_ref.get();
-			return thread != null ? DebugLib.traceback(thread, 0) : "orphaned thread";
+			return thread != null ? LibDebug.traceback(thread, 0) : "orphaned thread";
 		}
 	}
 
@@ -777,7 +775,7 @@ public class DebugLib extends VarArgFunction
 		LuaThread thread = args.isthread(a) ? args.checkthread(a++) : LuaThread.getRunning();
 		String message = args.optjstring(a++, null);
 		int level = args.optint(a++, 1);
-		String tb = DebugLib.traceback(thread, level - 1);
+		String tb = LibDebug.traceback(thread, level - 1);
 		return valueOf(message != null ? message + "\n" + tb : tb);
 	}
 

@@ -13,8 +13,8 @@ import org.luaj.vm2.LuaFunction;
 import org.luaj.vm2.LuaString;
 import org.luaj.vm2.LuaValue;
 import org.luaj.vm2.Prototype;
-import org.luaj.vm2.lib.BaseLib;
-import org.luaj.vm2.lib.jse.JsePlatform;
+import org.luaj.vm2.lib.LibBase;
+import org.luaj.vm2.lib.JsePlatform;
 
 /**
  * Compiler for Lua.
@@ -28,8 +28,7 @@ import org.luaj.vm2.lib.jse.JsePlatform;
  * initialized chunks, which is an interface common to
  * lua bytecode compiling and java bytecode compiling.
  * <p>
- * Teh {@link LuaC} compiler is installed by default by both the
- * {@link JsePlatform} and {@link JmePlatform} classes,
+ * Teh {@link LuaC} compiler is installed by default by {@link JsePlatform} class,
  * so in the following example, the default {@link LuaC} compiler
  * will be used:
  * <pre> {@code
@@ -38,7 +37,7 @@ import org.luaj.vm2.lib.jse.JsePlatform;
  * } </pre>
  * @see LuaCompiler
  * @see JsePlatform
- * @see BaseLib
+ * @see LibBase
  * @see LuaValue
  * @see Prototype
  */

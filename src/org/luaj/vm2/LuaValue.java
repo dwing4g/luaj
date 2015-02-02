@@ -1,6 +1,6 @@
 package org.luaj.vm2;
 
-import org.luaj.vm2.lib.jse.JsePlatform;
+import org.luaj.vm2.lib.JsePlatform;
 
 /**
  * Base class for all concrete lua type values.
@@ -56,7 +56,7 @@ import org.luaj.vm2.lib.jse.JsePlatform;
  * } </pre>
  * For this to work the file must be in the current directory, or in the class path,
  * dependening on the platform.
- * See {@link JsePlatform} and {@link JmePlatform} for details.
+ * See {@link JsePlatform} for details.
  * <p>
  * In general a {@link LuaError} may be thrown on any operation when the
  * types supplied to any operation are illegal from a lua perspective.
@@ -1756,12 +1756,11 @@ public abstract class LuaValue extends Varargs
 	 * Set the environment on an object.
 	 * <p>
 	 * Typically the environment is created once per application via a platform
-	 * helper method such as {@link org.luaj.vm2.lib.jse.JsePlatform#standardGlobals()}
+	 * helper method such as {@link org.luaj.vm2.lib.JsePlatform#standardGlobals()}
 	 * However, any object can serve as an environment if it contains suitable metatag
 	 * values to implement {@link #get(LuaValue)} to provide the environment values.
 	 * @param env {@link LuaValue} (typically a {@link LuaTable}) containing the environment.
-	 * @see org.luaj.vm2.lib.jme.JmePlatform
-	 * @see org.luaj.vm2.lib.jse.JsePlatform
+	 * @see org.luaj.vm2.lib.JsePlatform
 	 */
 	public void setfenv(LuaValue env)
 	{

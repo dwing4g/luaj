@@ -1,7 +1,7 @@
 package org.luaj.vm2;
 
 import java.lang.ref.WeakReference;
-import org.luaj.vm2.lib.TwoArgFunction;
+import org.luaj.vm2.lib.LibFunction2;
 
 /**
  * Subclass of {@link LuaTable} that provides weak key and weak value semantics.
@@ -232,7 +232,7 @@ public class WeakTable extends LuaTable
 	@Override
 	public void sort(final LuaValue comparator)
 	{
-		super.sort(new TwoArgFunction()
+		super.sort(new LibFunction2()
 		{
 			@Override
 			public LuaValue call(LuaValue arg1, LuaValue arg2)

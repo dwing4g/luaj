@@ -1,4 +1,4 @@
-package org.luaj.vm2.lib.jse;
+package org.luaj.vm2.lib;
 
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
@@ -7,7 +7,6 @@ import java.util.concurrent.ConcurrentHashMap;
 import org.luaj.vm2.LuaError;
 import org.luaj.vm2.LuaValue;
 import org.luaj.vm2.Varargs;
-import org.luaj.vm2.lib.VarArgFunction;
 
 /**
  * LuaValue that represents a particular public Java constructor.
@@ -73,7 +72,7 @@ class JavaConstructor extends JavaMember
 	 * It is returned by calls to calls to {@link JavaClass#get(LuaValue key)}
 	 * when key is "new" and there is more than one public constructor.
 	 */
-	static class Overload extends VarArgFunction
+	static class Overload extends LibFunctionV
 	{
 		final JavaConstructor[] _constructors;
 

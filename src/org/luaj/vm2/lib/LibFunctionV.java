@@ -15,23 +15,23 @@ import org.luaj.vm2.Varargs;
  * dropping or extending return values with {@code nil} values as required.
  * <p>
  * If between one and three arguments are required, and only one return value is returned,
- * {@link ZeroArgFunction}, {@link OneArgFunction}, {@link TwoArgFunction}, or {@link ThreeArgFunction}.
+ * {@link LibFunction0}, {@link LibFunction1}, {@link LibFunction2}, or {@link LibFunction3}.
  * <p>
  * See {@link LibFunction} for more information on implementation libraries and library functions.
  * @see #invoke(Varargs)
  * @see LibFunction
- * @see ZeroArgFunction
- * @see OneArgFunction
- * @see TwoArgFunction
- * @see ThreeArgFunction
+ * @see LibFunction0
+ * @see LibFunction1
+ * @see LibFunction2
+ * @see LibFunction3
  */
-abstract public class VarArgFunction extends LibFunction
+abstract public class LibFunctionV extends LibFunction
 {
-	public VarArgFunction()
+	public LibFunctionV()
 	{
 	}
 
-	public VarArgFunction(LuaValue env)
+	public LibFunctionV(LuaValue env)
 	{
 		this.env = env;
 	}

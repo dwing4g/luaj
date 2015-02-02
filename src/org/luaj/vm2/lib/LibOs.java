@@ -6,14 +6,12 @@ import java.util.concurrent.atomic.AtomicLong;
 import org.luaj.vm2.LuaTable;
 import org.luaj.vm2.LuaValue;
 import org.luaj.vm2.Varargs;
-import org.luaj.vm2.lib.jse.JsePlatform;
 
 /**
  * Subclass of {@link LibFunction} which implements the standard lua {@code os} library.
  * <p>
  * It is a usable base with simplified stub functions
- * for library functions that cannot be implemented uniformly
- * on Jse and Jme.
+ * for library functions that cannot be implemented uniformly on Jse.
  * <p>
  * This can be installed as-is on either platform, or extended
  * and refined to be used in a complete Jse implementation.
@@ -21,18 +19,6 @@ import org.luaj.vm2.lib.jse.JsePlatform;
  * Because the nature of the {@code os} library is to encapsulate
  * os-specific features, the behavior of these functions varies considerably
  * from their counterparts in the C platform.
- * <p>
- * The following functions have limited implementations of features
- * that are not supported well on Jme:
- * <ul>
- * <li>{@code execute()}</li>
- * <li>{@code remove()}</li>
- * <li>{@code rename()}</li>
- * <li>{@code tmpname()}</li>
- * </ul>
- * <p>
- * Typically, this library is included as part of a call to either
- * {@link JmePlatform#standardGlobals()}
  * <p>
  * To instantiate and use it directly,
  * link it into your globals table via {@link LuaValue#load(LuaValue)} using code such as:
@@ -51,7 +37,7 @@ import org.luaj.vm2.lib.jse.JsePlatform;
  * @see JsePlatform
  * @see <a href="http://www.lua.org/manual/5.1/manual.html#5.8">http://www.lua.org/manual/5.1/manual.html#5.8</a>
  */
-public class OsLib extends VarArgFunction
+public class LibOs extends LibFunctionV
 {
 	public static String          TMP_PREFIX       = ".luaj";
 	public static String          TMP_SUFFIX       = "tmp";
@@ -98,7 +84,7 @@ public class OsLib extends VarArgFunction
 	/**
 	 * Create and OsLib instance.
 	 */
-	public OsLib()
+	public LibOs()
 	{
 	}
 
@@ -107,7 +93,7 @@ public class OsLib extends VarArgFunction
 		LuaTable t = new LuaTable();
 		bind(t, this.getClass(), NAMES, CLOCK);
 		env.set("os", t);
-		PackageLib.instance.LOADED.set("os", t);
+		LibPackage.instance.LOADED.set("os", t);
 		return t;
 	}
 

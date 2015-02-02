@@ -1,8 +1,7 @@
-package org.luaj.vm2.lib.jse;
+package org.luaj.vm2.lib;
 
 import org.luaj.vm2.Varargs;
-import org.luaj.vm2.lib.VarArgFunction;
-import org.luaj.vm2.lib.jse.CoerceLuaToJava.Coercion;
+import org.luaj.vm2.lib.CoerceLuaToJava.Coercion;
 
 /**
  * Java method or constructor.
@@ -17,7 +16,7 @@ import org.luaj.vm2.lib.jse.CoerceLuaToJava.Coercion;
  * @see CoerceJavaToLua
  * @see CoerceLuaToJava
  */
-abstract class JavaMember extends VarArgFunction
+abstract class JavaMember extends LibFunctionV
 {
 	static final int METHOD_MODIFIERS_VARARGS = 0x80;
 

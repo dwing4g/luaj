@@ -23,10 +23,10 @@ package org.luaj.vm2;
 
 import java.lang.ref.WeakReference;
 import java.util.concurrent.atomic.AtomicLong;
-import org.luaj.vm2.lib.BaseLib;
-import org.luaj.vm2.lib.CoroutineLib;
-import org.luaj.vm2.lib.DebugLib;
-import org.luaj.vm2.lib.jse.JsePlatform;
+import org.luaj.vm2.lib.LibBase;
+import org.luaj.vm2.lib.LibCoroutine;
+import org.luaj.vm2.lib.LibDebug;
+import org.luaj.vm2.lib.JsePlatform;
 
 /**
  * Subclass of {@link LuaValue} that implements
@@ -39,9 +39,9 @@ import org.luaj.vm2.lib.jse.JsePlatform;
  * the global environment may be passed along according to rules of lua.
  * This is done via a call to {@link #setGlobals(LuaValue)}
  * at some point during globals initialization.
- * See {@link BaseLib} for additional documentation and example code.
+ * See {@link LibBase} for additional documentation and example code.
  * <p>
- * The utility classes {@link JsePlatform} and {@link JmePlatform}
+ * The utility classes {@link JsePlatform}
  * see to it that this initialization is done properly.
  * For this reason it is highly recommended to use one of these classes
  * when initializing globals.
@@ -58,7 +58,7 @@ import org.luaj.vm2.lib.jse.JsePlatform;
  *
  * @see LuaValue
  * @see JsePlatform
- * @see CoroutineLib
+ * @see LibCoroutine
  */
 public class LuaThread extends LuaValue
 {
@@ -215,7 +215,7 @@ public class LuaThread extends LuaValue
 	 * Callback used at the beginning of a call to prepare for possible getfenv/setfenv calls
 	 * @param function Function being called
 	 * @return CallStack which is used to signal the return or a tail-call recursion
-	 * @see DebugLib
+	 * @see LibDebug
 	 */
 	public static final CallStack onCall(LuaFunction function)
 	{
@@ -383,30 +383,30 @@ public class LuaThread extends LuaValue
 
 		/**
 		 * Method to indicate the start of a call
-		 * @see DebugLib
+		 * @see LibDebug
 		 */
 		final void onCall(LuaFunction function)
 		{
 			functions[calls++] = function;
-			if(DebugLib.DEBUG_ENABLED)
-			    DebugLib.debugOnCall(running_thread, calls, function);
+			if(LibDebug.DEBUG_ENABLED)
+			    LibDebug.debugOnCall(running_thread, calls, function);
 		}
 
 		/**
 		 * Method to signal the end of a call
-		 * @see DebugLib
+		 * @see LibDebug
 		 */
 		public final void onReturn()
 		{
 			functions[--calls] = null;
-			if(DebugLib.DEBUG_ENABLED)
-			    DebugLib.debugOnReturn(running_thread, calls);
+			if(LibDebug.DEBUG_ENABLED)
+			    LibDebug.debugOnReturn(running_thread, calls);
 		}
 
 		/**
 		 * Get number of calls in stack
 		 * @return number of calls in current call stack
-		 * @see DebugLib
+		 * @see LibDebug
 		 */
 		public final int getCallstackDepth()
 		{

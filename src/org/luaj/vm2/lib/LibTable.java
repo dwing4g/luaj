@@ -3,15 +3,11 @@ package org.luaj.vm2.lib;
 import org.luaj.vm2.LuaTable;
 import org.luaj.vm2.LuaValue;
 import org.luaj.vm2.Varargs;
-import org.luaj.vm2.lib.jse.JsePlatform;
 
 /**
  * Subclass of {@link LibFunction} which implements the lua standard {@code table}
  * library.
  *
- * <p>
- * Typically, this library is included as part of a call to either
- * {@link JsePlatform#standardGlobals()} or {@link JmePlatform#standardGlobals()}
  * <p>
  * To instantiate and use it directly,
  * link it into your globals table via {@link LuaValue#load(LuaValue)} using code such as:
@@ -35,20 +31,20 @@ import org.luaj.vm2.lib.jse.JsePlatform;
  * @see JsePlatform
  * @see <a href="http://www.lua.org/manual/5.1/manual.html#5.5">http://www.lua.org/manual/5.1/manual.html#5.5</a>
  */
-public class TableLib extends OneArgFunction
+public class LibTable extends LibFunction1
 {
-	public TableLib()
+	public LibTable()
 	{
 	}
 
 	private LuaTable init()
 	{
 		LuaTable t = new LuaTable();
-		bind(t, TableLib.class, new String[] { "getn", "maxn", }, 1);
+		bind(t, LibTable.class, new String[] { "getn", "maxn", }, 1);
 		bind(t, TableLibV.class, new String[] {
 		        "remove", "concat", "insert", "sort", "foreach", "foreachi", });
 		env.set("table", t);
-		PackageLib.instance.LOADED.set("table", t);
+		LibPackage.instance.LOADED.set("table", t);
 		return t;
 	}
 
@@ -67,7 +63,7 @@ public class TableLib extends OneArgFunction
 		return NIL;
 	}
 
-	static final class TableLibV extends VarArgFunction
+	static final class TableLibV extends LibFunctionV
 	{
 		@Override
 		public Varargs invoke(Varargs args)

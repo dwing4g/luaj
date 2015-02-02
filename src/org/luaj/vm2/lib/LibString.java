@@ -9,15 +9,11 @@ import org.luaj.vm2.LuaTable;
 import org.luaj.vm2.LuaValue;
 import org.luaj.vm2.Varargs;
 import org.luaj.vm2.compiler.DumpState;
-import org.luaj.vm2.lib.jse.JsePlatform;
 
 /**
  * Subclass of {@link LibFunction} which implements the lua standard {@code string}
  * library.
  *
- * <p>
- * Typically, this library is included as part of a call to either
- * {@link JsePlatform#standardGlobals()} or {@link JmePlatform#standardGlobals()}
  * <p>
  * To instantiate and use it directly,
  * link it into your globals table via {@link LuaValue#load(LuaValue)} using code such as:
@@ -36,11 +32,11 @@ import org.luaj.vm2.lib.jse.JsePlatform;
  * @see LibFunction
  * @see <a href="http://www.lua.org/manual/5.1/manual.html#5.4">http://www.lua.org/manual/5.1/manual.html#5.4</a>
  */
-public class StringLib extends OneArgFunction
+public class LibString extends LibFunction1
 {
 	public static LuaTable instance;
 
-	public StringLib()
+	public LibString()
 	{
 	}
 
@@ -58,11 +54,11 @@ public class StringLib extends OneArgFunction
 		instance = t;
 		if(LuaString.s_metatable == null)
 		    LuaString.s_metatable = tableOf(new LuaValue[] { INDEX, t });
-		PackageLib.instance.LOADED.set("string", t);
+		LibPackage.instance.LOADED.set("string", t);
 		return t;
 	}
 
-	static final class StringLib1 extends OneArgFunction
+	static final class StringLib1 extends LibFunction1
 	{
 		@Override
 		public LuaValue call(LuaValue arg)
@@ -72,7 +68,7 @@ public class StringLib extends OneArgFunction
 				case 0:
 					return dump(arg); // dump (function)
 				case 1:
-					return StringLib.len(arg); // len (function)
+					return LibString.len(arg); // len (function)
 				case 2:
 					return lower(arg); // lower (function)
 				case 3:
@@ -84,7 +80,7 @@ public class StringLib extends OneArgFunction
 		}
 	}
 
-	static final class StringLibV extends VarArgFunction
+	static final class StringLibV extends LibFunctionV
 	{
 		@Override
 		public Varargs invoke(Varargs args)
@@ -92,23 +88,23 @@ public class StringLib extends OneArgFunction
 			switch(_opcode)
 			{
 				case 0:
-					return StringLib.byte_(args);
+					return LibString.byte_(args);
 				case 1:
-					return StringLib.char_(args);
+					return LibString.char_(args);
 				case 2:
-					return StringLib.find(args);
+					return LibString.find(args);
 				case 3:
-					return StringLib.format(args);
+					return LibString.format(args);
 				case 4:
-					return StringLib.gmatch(args);
+					return LibString.gmatch(args);
 				case 5:
-					return StringLib.gsub(args);
+					return LibString.gsub(args);
 				case 6:
-					return StringLib.match(args);
+					return LibString.match(args);
 				case 7:
-					return StringLib.rep(args);
+					return LibString.rep(args);
 				case 8:
-					return StringLib.sub(args);
+					return LibString.sub(args);
 			}
 			return NONE;
 		}
@@ -563,7 +559,7 @@ public class StringLib extends OneArgFunction
 		return new GMatchAux(args, src, pat);
 	}
 
-	static class GMatchAux extends VarArgFunction
+	static class GMatchAux extends LibFunctionV
 	{
 		private final int        srclen;
 		private final MatchState ms;

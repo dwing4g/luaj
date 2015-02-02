@@ -8,7 +8,7 @@ import org.luaj.vm2.Print;
 import org.luaj.vm2.Prototype;
 import org.luaj.vm2.compiler.DumpState;
 import org.luaj.vm2.compiler.LuaC;
-import org.luaj.vm2.lib.jse.JsePlatform;
+import org.luaj.vm2.lib.JsePlatform;
 
 /**
  * Compiler for lua files to lua bytecode.

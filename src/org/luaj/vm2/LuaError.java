@@ -1,6 +1,6 @@
 package org.luaj.vm2;
 
-import org.luaj.vm2.lib.DebugLib;
+import org.luaj.vm2.lib.LibDebug;
 
 /**
  * RuntimeException that is thrown and caught in response to a lua error.
@@ -58,7 +58,7 @@ public class LuaError extends RuntimeException
 	{
 		super(errorHook(addFileLine("vm error: " + cause)));
 		this.cause = cause;
-		this.traceback = DebugLib.traceback(1);
+		this.traceback = LibDebug.traceback(1);
 	}
 
 	/**
@@ -69,7 +69,7 @@ public class LuaError extends RuntimeException
 	public LuaError(String message)
 	{
 		super(errorHook(addFileLine(message)));
-		this.traceback = DebugLib.traceback(1);
+		this.traceback = LibDebug.traceback(1);
 	}
 
 	/**
@@ -80,7 +80,7 @@ public class LuaError extends RuntimeException
 	public LuaError(String message, int level)
 	{
 		super(errorHook(addFileLine(message, level)));
-		this.traceback = DebugLib.traceback(1);
+		this.traceback = LibDebug.traceback(1);
 	}
 
 	/**
@@ -92,7 +92,7 @@ public class LuaError extends RuntimeException
 	{
 		if(message == null) return null;
 		if(level == 0) return message;
-		String fileline = DebugLib.fileline(level - 1);
+		String fileline = LibDebug.fileline(level - 1);
 		return fileline != null ? fileline + ": " + message : message;
 	}
 
@@ -102,7 +102,7 @@ public class LuaError extends RuntimeException
 	private static String addFileLine(String message)
 	{
 		if(message == null) return null;
-		String fileline = DebugLib.fileline();
+		String fileline = LibDebug.fileline();
 		return fileline != null ? fileline + ": " + message : message;
 	}
 

@@ -1,4 +1,4 @@
-package org.luaj.vm2.lib.jse;
+package org.luaj.vm2.lib;
 
 import java.lang.reflect.Array;
 import java.util.Map;
@@ -10,7 +10,7 @@ import org.luaj.vm2.LuaValue;
 /**
  * Helper class to coerce values from lua to Java within the luajava library.
  * <p>
- * This class is primarily used by the {@link LuajavaLib},
+ * This class is primarily used by the {@link LibLuajava},
  * but can also be used directly when working with Java/lua bindings.
  * <p>
  * To coerce to specific Java values, generally the {@code toType()} methods
@@ -31,7 +31,7 @@ import org.luaj.vm2.LuaValue;
  * For data in lua tables, the various methods on {@link LuaTable} can be used directly
  * to convert data to something more useful.
  *
- * @see LuajavaLib
+ * @see LibLuajava
  * @see CoerceJavaToLua
  */
 public class CoerceLuaToJava

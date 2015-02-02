@@ -1,32 +1,30 @@
 package org.luaj.vm2.lib;
 
+import java.io.BufferedInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.EOFException;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.io.RandomAccessFile;
 import java.util.List;
+import org.luaj.vm2.LuaError;
 import org.luaj.vm2.LuaString;
 import org.luaj.vm2.LuaTable;
 import org.luaj.vm2.LuaValue;
 import org.luaj.vm2.Varargs;
-import org.luaj.vm2.lib.jse.JseIoLib;
-import org.luaj.vm2.lib.jse.JsePlatform;
 
 /**
  * Abstract base class extending {@link LibFunction} which implements the
  * core of the lua standard {@code io} library.
  * <p>
- * It contains the implementation of the io library support that is common to
- * the JSE and JME platforms.
+ * It contains the implementation of the io library support that is common to the JSE platforms.
  * In practice on of the concrete IOLib subclasses is chosen:
- * {@link org.luaj.vm2.lib.jse.JseIoLib} for the JSE platform, and
- * {@link org.luaj.vm2.lib.jme.JmeIoLib} for the JME platform.
+ * {@link org.luaj.vm2.lib.jse.JseIoLib} for the JSE platform.
  * <p>
  * The JSE implementation conforms almost completely to the C-based lua library,
  * while the JME implementation follows closely except in the area of random-access files,
  * which are difficult to support properly on JME.
- * <p>
- * Typically, this library is included as part of a call to either
- * {@link JsePlatform#standardGlobals()} or {@link JmePlatform#standardGlobals()}
  * <p>
  * To instantiate and use it directly,
  * link it into your globals table via {@link LuaValue#load(LuaValue)} using code such as:
@@ -44,11 +42,10 @@ import org.luaj.vm2.lib.jse.JsePlatform;
  * <p>
  * This has been implemented to match as closely as possible the behavior in the corresponding library in C.
  * @see LibFunction
- * @see JsePlatform
  * @see JseIoLib
  * @see <a href="http://www.lua.org/manual/5.1/manual.html#5.7">http://www.lua.org/manual/5.1/manual.html#5.7</a>
  */
-abstract public class IoLib extends OneArgFunction
+public class LibIo extends LibFunction1
 {
 	abstract protected class File extends LuaValue
 	{
@@ -106,48 +103,6 @@ abstract public class IoLib extends OneArgFunction
 			return "file: " + Integer.toHexString(hashCode());
 		}
 	}
-
-	/**
-	 * Wrap the standard input.
-	 * @return File
-	 * @throws IOException
-	 */
-	abstract protected File wrapStdin() throws IOException;
-
-	/**
-	 * Wrap the standard output.
-	 * @return File
-	 * @throws IOException
-	 */
-	abstract protected File wrapStdout() throws IOException;
-
-	/**
-	 * Open a file in a particular mode.
-	 * @param filename
-	 * @param readMode true if opening in read mode
-	 * @param appendMode true if opening in append mode
-	 * @param updateMode true if opening in update mode
-	 * @param binaryMode true if opening in binary mode
-	 * @return File object if successful
-	 * @throws IOException if could not be opened
-	 */
-	abstract protected File openFile(String filename, boolean readMode, boolean appendMode, boolean updateMode, boolean binaryMode) throws IOException;
-
-	/**
-	 * Open a temporary file.
-	 * @return File object if successful
-	 * @throws IOException if could not be opened
-	 */
-	abstract protected File tmpFile() throws IOException;
-
-	/**
-	 * Start a new process and return a file for input or output
-	 * @param prog the program to execute
-	 * @param mode "r" to read, "w" to write
-	 * @return File to read to or write from
-	 * @throws IOException if an i/o exception occurs
-	 */
-	abstract protected File openProgram(String prog, String mode) throws IOException;
 
 	private File                  infile       = null;
 	private File                  outfile      = null;
@@ -208,7 +163,7 @@ abstract public class IoLib extends OneArgFunction
 
 	LuaTable                      filemethods;
 
-	public IoLib()
+	public LibIo()
 	{
 	}
 
@@ -236,7 +191,7 @@ abstract public class IoLib extends OneArgFunction
 
 		// return the table
 		env.set("io", t);
-		PackageLib.instance.LOADED.set("io", t);
+		LibPackage.instance.LOADED.set("io", t);
 		return t;
 	}
 
@@ -247,15 +202,15 @@ abstract public class IoLib extends OneArgFunction
 			((IoLibV)t.get(k.get(i))).iolib = this;
 	}
 
-	static final class IoLibV extends VarArgFunction
+	static final class IoLibV extends LibFunctionV
 	{
-		public IoLib iolib;
+		public LibIo iolib;
 
 		public IoLibV()
 		{
 		}
 
-		public IoLibV(LuaValue env, String name, int opcode, IoLib iolib)
+		public IoLibV(LuaValue env, String name, int opcode, LibIo iolib)
 		{
 			super();
 			this.env = env;
@@ -282,7 +237,7 @@ abstract public class IoLib extends OneArgFunction
 					case IO_OUTPUT:
 						return iolib._io_output(args.arg1());
 					case IO_TYPE:
-						return IoLib._io_type(args.arg1());
+						return LibIo._io_type(args.arg1());
 					case IO_POPEN:
 						return iolib._io_popen(args.checkjstring(1), args.optjstring(2, "r"));
 					case IO_OPEN:
@@ -294,23 +249,23 @@ abstract public class IoLib extends OneArgFunction
 					case IO_WRITE:
 						return iolib._io_write(args);
 					case FILE_CLOSE:
-						return IoLib._file_close(args.arg1());
+						return LibIo._file_close(args.arg1());
 					case FILE_FLUSH:
-						return IoLib._file_flush(args.arg1());
+						return LibIo._file_flush(args.arg1());
 					case FILE_SETVBUF:
-						return IoLib._file_setvbuf(args.arg1(), args.checkjstring(2), args.optint(3, 1024));
+						return LibIo._file_setvbuf(args.arg1(), args.checkjstring(2), args.optint(3, 1024));
 					case FILE_LINES:
 						return iolib._file_lines(args.arg1());
 					case FILE_READ:
-						return IoLib._file_read(args.arg1(), args.subargs(2));
+						return LibIo._file_read(args.arg1(), args.subargs(2));
 					case FILE_SEEK:
-						return IoLib._file_seek(args.arg1(), args.optjstring(2, "cur"), args.optint(3, 0));
+						return LibIo._file_seek(args.arg1(), args.optjstring(2, "cur"), args.optint(3, 0));
 					case FILE_WRITE:
-						return IoLib._file_write(args.arg1(), args.subargs(2));
+						return LibIo._file_write(args.arg1(), args.subargs(2));
 					case IO_INDEX:
 						return iolib._io_index(args.arg(2));
 					case LINES_ITER:
-						return IoLib._lines_iter(env);
+						return LibIo._lines_iter(env);
 				}
 			}
 			catch(IOException ioe)
@@ -699,6 +654,253 @@ abstract public class IoLib extends OneArgFunction
 			f.read();
 			if(baos != null)
 			    baos.write(c);
+		}
+	}
+
+	/**
+	 * Wrap the standard input.
+	 * @return File
+	 * @throws IOException
+	 */
+	protected File wrapStdin() throws IOException
+	{
+		return new FileImpl(System.in);
+	}
+
+	/**
+	 * Wrap the standard output.
+	 * @return File
+	 * @throws IOException
+	 */
+	protected File wrapStdout() throws IOException
+	{
+		return new FileImpl(System.out);
+	}
+
+	/**
+	 * Open a file in a particular mode.
+	 * @param filename
+	 * @param readMode true if opening in read mode
+	 * @param appendMode true if opening in append mode
+	 * @param updateMode true if opening in update mode
+	 * @param binaryMode true if opening in binary mode
+	 * @return File object if successful
+	 * @throws IOException if could not be opened
+	 */
+	@SuppressWarnings("resource")
+	protected File openFile(String filename, boolean readMode, boolean appendMode, boolean updateMode, boolean binaryMode) throws IOException
+	{
+		RandomAccessFile f = new RandomAccessFile(filename, readMode ? "r" : "rw");
+		if(appendMode)
+			f.seek(f.length());
+		else
+		{
+			if(!readMode)
+			    f.setLength(0);
+		}
+		return new FileImpl(f);
+	}
+
+	/**
+	 * Start a new process and return a file for input or output
+	 * @param prog the program to execute
+	 * @param mode "r" to read, "w" to write
+	 * @return File to read to or write from
+	 * @throws IOException if an i/o exception occurs
+	 */
+	protected File openProgram(String prog, String mode) throws IOException
+	{
+		final Process p = Runtime.getRuntime().exec(prog);
+		return "w".equals(mode) ?
+		        new FileImpl(p.getOutputStream()) :
+		        new FileImpl(p.getInputStream());
+	}
+
+	/**
+	 * Open a temporary file.
+	 * @return File object if successful
+	 * @throws IOException if could not be opened
+	 */
+	@SuppressWarnings("resource")
+	protected File tmpFile() throws IOException
+	{
+		java.io.File f = java.io.File.createTempFile(".luaj", "bin");
+		f.deleteOnExit();
+		return new FileImpl(new RandomAccessFile(f, "rw"));
+	}
+
+	private static void notimplemented()
+	{
+		throw new LuaError("not implemented");
+	}
+
+	private final class FileImpl extends File
+	{
+		private final RandomAccessFile file;
+		private final InputStream      is;
+		private final OutputStream     os;
+		private boolean                closed   = false;
+		private boolean                nobuffer = false;
+
+		private FileImpl(RandomAccessFile file, InputStream is, OutputStream os)
+		{
+			this.file = file;
+			this.is = is != null ? is.markSupported() ? is : new BufferedInputStream(is) : null;
+			this.os = os;
+		}
+
+		private FileImpl(RandomAccessFile f)
+		{
+			this(f, null, null);
+		}
+
+		private FileImpl(InputStream i)
+		{
+			this(null, i, null);
+		}
+
+		private FileImpl(OutputStream o)
+		{
+			this(null, null, o);
+		}
+
+		@Override
+		public String tojstring()
+		{
+			return "file (" + this.hashCode() + ")";
+		}
+
+		@Override
+		public boolean isstdfile()
+		{
+			return file == null;
+		}
+
+		@Override
+		public void close() throws IOException
+		{
+			closed = true;
+			if(file != null)
+			{
+				file.close();
+			}
+		}
+
+		@Override
+		public void flush() throws IOException
+		{
+			if(os != null)
+			    os.flush();
+		}
+
+		@Override
+		public void write(LuaString s) throws IOException
+		{
+			if(os != null)
+				os.write(s.m_bytes, s.m_offset, s.m_length);
+			else if(file != null)
+				file.write(s.m_bytes, s.m_offset, s.m_length);
+			else
+				notimplemented();
+			if(nobuffer)
+			    flush();
+		}
+
+		@Override
+		public boolean isclosed()
+		{
+			return closed;
+		}
+
+		@Override
+		public int seek(String option, int pos) throws IOException
+		{
+			if(file != null)
+			{
+				if("set".equals(option))
+				{
+					file.seek(pos);
+				}
+				else if("end".equals(option))
+				{
+					file.seek(file.length() + pos);
+				}
+				else
+				{
+					file.seek(file.getFilePointer() + pos);
+				}
+				return (int)file.getFilePointer();
+			}
+			notimplemented();
+			return 0;
+		}
+
+		@Override
+		public void setvbuf(String mode, int size)
+		{
+			nobuffer = "no".equals(mode);
+		}
+
+		// get length remaining to read
+		@Override
+		public int remaining() throws IOException
+		{
+			return file != null ? (int)(file.length() - file.getFilePointer()) : -1;
+		}
+
+		// peek ahead one character
+		@Override
+		public int peek() throws IOException
+		{
+			if(is != null)
+			{
+				is.mark(1);
+				int c = is.read();
+				is.reset();
+				return c;
+			}
+			else if(file != null)
+			{
+				long fp = file.getFilePointer();
+				int c = file.read();
+				file.seek(fp);
+				return c;
+			}
+			notimplemented();
+			return 0;
+		}
+
+		// return char if read, -1 if eof, throw IOException on other exception
+		@Override
+		public int read() throws IOException
+		{
+			if(is != null)
+				return is.read();
+			else if(file != null)
+			{
+				return file.read();
+			}
+			notimplemented();
+			return 0;
+		}
+
+		// return number of bytes read if positive, -1 if eof, throws IOException
+		@Override
+		public int read(byte[] bytes, int offset, int length) throws IOException
+		{
+			if(file != null)
+			{
+				return file.read(bytes, offset, length);
+			}
+			else if(is != null)
+			{
+				return is.read(bytes, offset, length);
+			}
+			else
+			{
+				notimplemented();
+			}
+			return length;
 		}
 	}
 }

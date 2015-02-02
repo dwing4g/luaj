@@ -8,15 +8,11 @@ import org.luaj.vm2.LuaTable;
 import org.luaj.vm2.LuaThread;
 import org.luaj.vm2.LuaValue;
 import org.luaj.vm2.Varargs;
-import org.luaj.vm2.lib.jse.JsePlatform;
 
 /**
  * Subclass of {@link LibFunction} which implements the lua standard package and module
  * library functions.
  *
- * <p>
- * Typically, this library is included as part of a call to either
- * {@link JsePlatform#standardGlobals()} or {@link JmePlatform#standardGlobals()}
  * <p>
  * To instantiate and use it directly,
  * link it into your globals table via {@link LuaValue#load(LuaValue)} using code such as:
@@ -29,18 +25,17 @@ import org.luaj.vm2.lib.jse.JsePlatform;
  * } </pre>
  * In practice, the first 4 lines of the above are minimal requirements to get
  * and initialize a globals table capable of basic reqire, print, and other functions,
- * so it is much more convenient to use the {@link JsePlatform} and {@link JmePlatform}
- * utility classes instead.
+ * so it is much more convenient to use the {@link JsePlatform} utility classes instead.
  * <p>
  * This has been implemented to match as closely as possible the behavior in the corresponding library in C.
  * However, the default filesystem search semantics are different and delegated to the bas library
- * as outlined in the {@link BaseLib} documetnation.
+ * as outlined in the {@link LibBase} documetnation.
  * @see LibFunction
- * @see BaseLib
+ * @see LibBase
  * @see JsePlatform
  * @see <a href="http://www.lua.org/manual/5.1/manual.html#5.3">http://www.lua.org/manual/5.1/manual.html#5.3</a>
  */
-public class PackageLib extends OneArgFunction
+public class LibPackage extends LibFunction1
 {
 	public static String           DEFAULT_LUA_PATH  = "?.lua";
 
@@ -50,7 +45,7 @@ public class PackageLib extends OneArgFunction
 	public LuaTable                PACKAGE;
 
 	/** Most recent instance of PackageLib */
-	public static PackageLib       instance;
+	public static LibPackage       instance;
 
 	/** Loader that loads from preload table if found there */
 	public LuaValue                preload_loader;
@@ -81,7 +76,7 @@ public class PackageLib extends OneArgFunction
 	private static final int       OP_LUA_LOADER     = 5;
 	private static final int       OP_JAVA_LOADER    = 6;
 
-	public PackageLib()
+	public LibPackage()
 	{
 		instance = this;
 	}
@@ -106,11 +101,11 @@ public class PackageLib extends OneArgFunction
 		return env;
 	}
 
-	static final class PkgLib1 extends OneArgFunction
+	static final class PkgLib1 extends LibFunction1
 	{
-		PackageLib lib;
+		LibPackage lib;
 
-		public PkgLib1(LuaValue env, String name, int opcode, PackageLib lib)
+		public PkgLib1(LuaValue env, String name, int opcode, LibPackage lib)
 		{
 			this.env = env;
 			this._name = name;
@@ -139,11 +134,11 @@ public class PackageLib extends OneArgFunction
 		}
 	}
 
-	static final class PkgLibV extends VarArgFunction
+	static final class PkgLibV extends LibFunctionV
 	{
-		PackageLib lib;
+		LibPackage lib;
 
-		public PkgLibV(LuaValue env, String name, int opcode, PackageLib lib)
+		public PkgLibV(LuaValue env, String name, int opcode, LibPackage lib)
 		{
 			this.env = env;
 			this._name = name;
@@ -414,7 +409,7 @@ public class PackageLib extends OneArgFunction
 			}
 
 			// try loading the file
-			Varargs v = BaseLib.loadFile(filename);
+			Varargs v = LibBase.loadFile(filename);
 			if(v.arg1().isfunction())
 			    return v.arg1();
 

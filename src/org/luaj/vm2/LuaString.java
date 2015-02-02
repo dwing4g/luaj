@@ -6,8 +6,8 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.lang.ref.WeakReference;
 import java.util.HashMap;
-import org.luaj.vm2.lib.MathLib;
-import org.luaj.vm2.lib.StringLib;
+import org.luaj.vm2.lib.LibMath;
+import org.luaj.vm2.lib.LibString;
 
 /**
  * Subclass of {@link LuaValue} for representing lua strings.
@@ -173,7 +173,7 @@ public class LuaString extends LuaValue
 	@Override
 	public LuaValue get(LuaValue key)
 	{
-		return s_metatable != null ? gettable(this, key) : StringLib.instance.get(key);
+		return s_metatable != null ? gettable(this, key) : LibString.instance.get(key);
 	}
 
 	// unary operators
@@ -258,25 +258,25 @@ public class LuaString extends LuaValue
 	@Override
 	public LuaValue pow(double rhs)
 	{
-		return MathLib.dpow(checkarith(), rhs);
+		return LibMath.dpow(checkarith(), rhs);
 	}
 
 	@Override
 	public LuaValue pow(int rhs)
 	{
-		return MathLib.dpow(checkarith(), rhs);
+		return LibMath.dpow(checkarith(), rhs);
 	}
 
 	@Override
 	public LuaValue powWith(double lhs)
 	{
-		return MathLib.dpow(lhs, checkarith());
+		return LibMath.dpow(lhs, checkarith());
 	}
 
 	@Override
 	public LuaValue powWith(int lhs)
 	{
-		return MathLib.dpow(lhs, checkarith());
+		return LibMath.dpow(lhs, checkarith());
 	}
 
 	@Override

@@ -4,7 +4,7 @@ import java.io.DataInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import org.luaj.vm2.compiler.LuaC;
-import org.luaj.vm2.lib.jse.JsePlatform;
+import org.luaj.vm2.lib.JsePlatform;
 
 /**
 * Class to manage loading of {@link Prototype} instances.
@@ -24,7 +24,7 @@ import org.luaj.vm2.lib.jse.JsePlatform;
 *
 * Prior to loading code, a compiler should be installed.
 * <p>
-* By default, when using {@link JsePlatform} or {@JmePlatform}
+* By default, when using {@link JsePlatform}
 * to construct globals, the {@link LuaC} compiler is installed.
 * <p>
 * To override the default compiler with, say, the {@link LuaJC}
