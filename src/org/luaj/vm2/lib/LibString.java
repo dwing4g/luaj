@@ -179,7 +179,7 @@ public class LibString extends LibFunction1
 		ByteArrayOutputStream baos = new ByteArrayOutputStream();
 		try
 		{
-			DumpState.dump(((LuaClosure)f).p, baos, true);
+			DumpState.dump(((LuaClosure)f)._p, baos, true);
 			return LuaString.valueOf(baos.toByteArray());
 		}
 		catch(IOException e)

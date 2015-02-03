@@ -225,21 +225,21 @@ public class LibDebug extends LibFunctionV
 		public int currentline()
 		{
 			if(closure == null) return -1;
-			int[] li = closure.p.lineinfo;
+			int[] li = closure._p.lineinfo;
 			return li == null || _pc < 0 || _pc >= li.length ? -1 : li[_pc];
 		}
 
 		public LuaString[] getfunckind()
 		{
 			if(closure == null || _pc < 0) return null;
-			int stackpos = (closure.p.code[_pc] >> 6) & 0xff;
+			int stackpos = (closure._p.code[_pc] >> 6) & 0xff;
 			return getobjname(this, stackpos);
 		}
 
 		public String sourceline()
 		{
 			if(closure == null) return func.tojstring();
-			String s = closure.p.source.tojstring();
+			String s = closure._p.source.tojstring();
 			int line = currentline();
 			return (s.startsWith("@") || s.startsWith("=") ? s.substring(1) : s) + ":" + line;
 		}
@@ -257,7 +257,7 @@ public class LibDebug extends LibFunctionV
 		public LuaString getlocalname(int index)
 		{
 			if(closure == null) return null;
-			return closure.p.getlocalname(index, _pc);
+			return closure._p.getlocalname(index, _pc);
 		}
 
 		public String tojstring()
@@ -463,7 +463,7 @@ public class LibDebug extends LibFunctionV
 			int newline = di.currentline();
 			if(newline != ds.line)
 			{
-				int c = di.closure.p.code[pc];
+				int c = di.closure._p.code[pc];
 				if((c & 0x3f) != Lua.OP_JMP || ((c >>> 14) - 0x1ffff) >= 0)
 				{
 					ds.line = newline;
@@ -568,7 +568,7 @@ public class LibDebug extends LibFunctionV
 				{
 					if(c != null)
 					{
-						Prototype p = c.p;
+						Prototype p = c._p;
 						info.set(WHAT, LUA);
 						info.set(SOURCE, p.source);
 						info.set(SHORT_SRC, valueOf(sourceshort(p)));
@@ -595,7 +595,7 @@ public class LibDebug extends LibFunctionV
 				}
 				case 'u':
 				{
-					info.set(NUPS, valueOf(c != null ? c.p.nups : 0));
+					info.set(NUPS, valueOf(c != null ? c._p.nups : 0));
 					break;
 				}
 				case 'n':
@@ -726,10 +726,10 @@ public class LibDebug extends LibFunctionV
 
 	static LuaString findupvalue(LuaClosure c, int up)
 	{
-		if(c.upValues != null && up > 0 && up <= c.upValues.length)
+		if(c._upValues != null && up > 0 && up <= c._upValues.length)
 		{
-			if(c.p.upvalues != null && up <= c.p.upvalues.length)
-			    return c.p.upvalues[up - 1];
+			if(c._p.upvalues != null && up <= c._p.upvalues.length)
+			    return c._p.upvalues[up - 1];
 			return LuaString.valueOf("." + up);
 		}
 		return null;
@@ -745,7 +745,7 @@ public class LibDebug extends LibFunctionV
 			LuaString name = findupvalue(c, up);
 			if(name != null)
 			{
-				return varargsOf(name, c.upValues[up - 1].getValue());
+				return varargsOf(name, c._upValues[up - 1].getValue());
 			}
 		}
 		return NIL;
@@ -762,7 +762,7 @@ public class LibDebug extends LibFunctionV
 			LuaString name = findupvalue(c, up);
 			if(name != null)
 			{
-				c.upValues[up - 1].setValue(value);
+				c._upValues[up - 1].setValue(value);
 				return name;
 			}
 		}
@@ -862,7 +862,7 @@ public class LibDebug extends LibFunctionV
 		LuaString name;
 		if(di.closure != null)
 		{ /* a Lua function? */
-			Prototype p = di.closure.p;
+			Prototype p = di.closure._p;
 			int pc = di._pc; // currentpc(L, ci);
 			int i;// Instruction i;
 			name = p.getlocalname(stackpos + 1, pc);

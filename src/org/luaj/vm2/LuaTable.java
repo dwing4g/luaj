@@ -595,15 +595,13 @@ public class LuaTable extends LuaValue
 	 */
 	public int hashFindSlot(LuaValue key)
 	{
-		int i = (key.hashCode() & 0x7FFFFFFF) % hashKeys.length;
+		int i = (key.hashCode() & 0x7fffffff) % hashKeys.length;
 
 		// This loop is guaranteed to terminate as long as we never allow the
 		// table to get 100% full.
 		LuaValue k;
 		while((k = hashKeys[i]) != null && !k.raweq(key))
-		{
 			i = (i + 1) % hashKeys.length;
-		}
 		return i;
 	}
 

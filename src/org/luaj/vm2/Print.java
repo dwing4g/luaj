@@ -364,7 +364,7 @@ public class Print extends Lua
 		// print opcode into buffer
 		ByteArrayOutputStream baos = new ByteArrayOutputStream();
 		PrintStream ps = new PrintStream(baos);
-		printOpCode(ps, cl.p, pc);
+		printOpCode(ps, cl._p, pc);
 		ps.flush();
 		ps.close();
 		ps = System.out;
@@ -388,7 +388,7 @@ public class Print extends Lua
 						break;
 					case LuaValue.TFUNCTION:
 						ps.print((v instanceof LuaClosure) ?
-						        ((LuaClosure)v).p.toString() : v.tojstring());
+						        ((LuaClosure)v)._p.toString() : v.tojstring());
 						break;
 					case LuaValue.TUSERDATA:
 						Object o = v.touserdata();

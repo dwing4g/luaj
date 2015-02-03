@@ -13,7 +13,7 @@ import org.luaj.vm2.lib.LibMath;
  * There are no API's specific to LuaInteger that are useful beyond what is already
  * exposed in {@link LuaValue}.
  */
-public class LuaInteger extends LuaNumber
+public final class LuaInteger extends LuaNumber
 {
 	private static final LuaInteger[] intValues = new LuaInteger[512];
 
@@ -32,15 +32,12 @@ public class LuaInteger extends LuaNumber
 	/** Return a LuaNumber that represents the value provided
 	 * @param l long value to represent.
 	 * @return LuaNumber that is eithe LuaInteger or LuaDouble representing l
-	 * @see LuaValue#valueOf(int)
-	 * @see LuaValue#valueOf(double)
 	 */
 	public static LuaNumber valueOf(long l)
 	{
 		int i = (int)l;
 		return l == i ? (i <= 255 && i >= -256 ? intValues[i + 256] :
-		        (LuaNumber)new LuaInteger(i)) :
-		        (LuaNumber)LuaDouble.valueOf(l);
+		        new LuaInteger(i)) : LuaDouble.valueOf(l);
 	}
 
 	/** The value being held by this instance. */
