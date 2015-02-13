@@ -2605,7 +2605,7 @@ public abstract class LuaValue extends Varargs
 	 * @see #raweq(LuaValue)
 	 * @see #EQ
 	 */
-	public static final boolean eqmtcall(LuaValue lhs, LuaValue lhsmt, LuaValue rhs, LuaValue rhsmt)
+	public static boolean eqmtcall(LuaValue lhs, LuaValue lhsmt, LuaValue rhs, LuaValue rhsmt)
 	{
 		LuaValue h = lhsmt.rawget(EQ);
 		return h.isnil() || h != rhsmt.rawget(EQ) ? false : h.call(lhs, rhs).toboolean();
@@ -4106,7 +4106,7 @@ public abstract class LuaValue extends Varargs
 	/** Construct a {@link Varargs} around an array of {@link LuaValue}s.
 	 *
 	 * @param v The array of {@link LuaValue}s
-	 * @param more {@link Varargs} contain values to include at the end
+	 * @param _more {@link Varargs} contain values to include at the end
 	 * @return {@link Varargs} wrapping the supplied values.
 	 * @see LuaValue#varargsOf(LuaValue, Varargs)
 	 * @see LuaValue#varargsOf(LuaValue[], int, int)
@@ -4129,7 +4129,7 @@ public abstract class LuaValue extends Varargs
 	/** Construct a {@link Varargs} around an array of {@link LuaValue}s.
 	 *
 	 * @param v The array of {@link LuaValue}s
-	 * @param more {@link Varargs} contain values to include at the end
+	 * @param _more {@link Varargs} contain values to include at the end
 	 * @return {@link Varargs} wrapping the supplied values.
 	 * @see LuaValue#varargsOf(LuaValue[])
 	 * @see LuaValue#varargsOf(LuaValue[], int, int, Varargs)
@@ -4156,7 +4156,7 @@ public abstract class LuaValue extends Varargs
 	 * @see LuaValue#varargsOf(LuaValue[])
 	 * @see LuaValue#varargsOf(LuaValue[], int, int, Varargs)
 	 */
-	public static Varargs varargsOf(final LuaValue[] v, final int offset, final int length)
+	public static Varargs varargsOf(LuaValue[] v, final int offset, final int length)
 	{
 		switch(length)
 		{
@@ -4181,7 +4181,7 @@ public abstract class LuaValue extends Varargs
 	 * @see LuaValue#varargsOf(LuaValue[], Varargs)
 	 * @see LuaValue#varargsOf(LuaValue[], int, int)
 	 */
-	public static Varargs varargsOf(final LuaValue[] v, final int offset, final int length, Varargs more)
+	public static Varargs varargsOf(LuaValue[] v, final int offset, final int length, Varargs more)
 	{
 		switch(length)
 		{
@@ -4199,8 +4199,8 @@ public abstract class LuaValue extends Varargs
 	 * This can be used to wrap exactly 2 values, or a list consisting of 1 initial value
 	 * followed by another variable list of remaining values.
 	 *
-	 * @param v1 First {@link LuaValue} in the {@link Varargs}
-	 * @param v2 {@link LuaValue} supplying the 2rd value,
+	 * @param _v1 First {@link LuaValue} in the {@link Varargs}
+	 * @param _v2 {@link LuaValue} supplying the 2rd value,
 	 * or {@link Varargs}s supplying all values beyond the first
 	 * @return {@link Varargs} wrapping the supplied values.
 	 */
@@ -4326,10 +4326,10 @@ public abstract class LuaValue extends Varargs
 	 * @see LuaValue#varargsOf(LuaValue[])
 	 * @see LuaValue#varargsOf(LuaValue[], Varargs)
 	 */
-	static final class VarargsArray extends Varargs
+	private static final class VarargsArray extends Varargs
 	{
-		private final LuaValue[] v;
-		private final Varargs    r;
+		private final LuaValue[] _v;
+		private final Varargs    _r;
 
 		/** Construct a Varargs from an array of LuaValue.
 		 * <p>
@@ -4339,28 +4339,28 @@ public abstract class LuaValue extends Varargs
 		 * @see LuaValue#varargsOf(LuaValue[])
 		 * @see LuaValue#varargsOf(LuaValue[], Varargs)
 		 */
-		VarargsArray(LuaValue[] v, Varargs r)
+		private VarargsArray(LuaValue[] v, Varargs r)
 		{
-			this.v = v;
-			this.r = r;
+			_v = v;
+			_r = r;
 		}
 
 		@Override
 		public LuaValue arg(int i)
 		{
-			return i >= 1 && i <= v.length ? v[i - 1] : r.arg(i - v.length);
+			return i >= 1 && i <= _v.length ? _v[i - 1] : _r.arg(i - _v.length);
 		}
 
 		@Override
 		public int narg()
 		{
-			return v.length + r.narg();
+			return _v.length + _r.narg();
 		}
 
 		@Override
 		public LuaValue arg1()
 		{
-			return v.length > 0 ? v[0] : r.arg1();
+			return _v.length > 0 ? _v[0] : _r.arg1();
 		}
 	}
 
@@ -4372,12 +4372,12 @@ public abstract class LuaValue extends Varargs
 	 * @see LuaValue#varargsOf(LuaValue[], int, int)
 	 * @see LuaValue#varargsOf(LuaValue[], int, int, Varargs)
 	 */
-	static final class VarargsArrayPart extends Varargs
+	private static final class VarargsArrayPart extends Varargs
 	{
-		private final int        offset;
-		private final LuaValue[] v;
-		private final int        length;
-		private final Varargs    more;
+		private final LuaValue[] _v;
+		private final int        _offset;
+		private final int        _length;
+		private final Varargs    _more;
 
 		/** Construct a Varargs from an array of LuaValue.
 		 * <p>
@@ -4386,12 +4386,12 @@ public abstract class LuaValue extends Varargs
 		 *
 		 * @see LuaValue#varargsOf(LuaValue[], int, int)
 		 */
-		VarargsArrayPart(LuaValue[] v, int offset, int length)
+		private VarargsArrayPart(LuaValue[] v, int offset, int length)
 		{
-			this.v = v;
-			this.offset = offset;
-			this.length = length;
-			more = NONE;
+			_v = v;
+			_offset = offset;
+			_length = length;
+			_more = NONE;
 		}
 
 		/** Construct a Varargs from an array of LuaValue and additional arguments.
@@ -4403,28 +4403,28 @@ public abstract class LuaValue extends Varargs
 		 */
 		public VarargsArrayPart(LuaValue[] v, int offset, int length, Varargs more)
 		{
-			this.v = v;
-			this.offset = offset;
-			this.length = length;
-			this.more = more;
+			_v = v;
+			_offset = offset;
+			_length = length;
+			_more = more;
 		}
 
 		@Override
 		public LuaValue arg(int i)
 		{
-			return i >= 1 && i <= length ? v[i + offset - 1] : more.arg(i - length);
+			return i >= 1 && i <= _length ? _v[i + _offset - 1] : _more.arg(i - _length);
 		}
 
 		@Override
 		public int narg()
 		{
-			return length + more.narg();
+			return _length + _more.narg();
 		}
 
 		@Override
 		public LuaValue arg1()
 		{
-			return length > 0 ? v[offset] : more.arg1();
+			return _length > 0 ? _v[_offset] : _more.arg1();
 		}
 	}
 
@@ -4437,8 +4437,8 @@ public abstract class LuaValue extends Varargs
 	 */
 	static final class VarargsPair extends Varargs
 	{
-		private final LuaValue v1;
-		private final Varargs  v2;
+		private final LuaValue _v1;
+		private final Varargs  _v2;
 
 		/** Construct a Varargs from an two LuaValue.
 		 * <p>
@@ -4449,26 +4449,26 @@ public abstract class LuaValue extends Varargs
 		 */
 		VarargsPair(LuaValue v1, Varargs v2)
 		{
-			this.v1 = v1;
-			this.v2 = v2;
+			_v1 = v1;
+			_v2 = v2;
 		}
 
 		@Override
 		public LuaValue arg(int i)
 		{
-			return i == 1 ? v1 : v2.arg(i - 1);
+			return i == 1 ? _v1 : _v2.arg(i - 1);
 		}
 
 		@Override
 		public int narg()
 		{
-			return 1 + v2.narg();
+			return 1 + _v2.narg();
 		}
 
 		@Override
 		public LuaValue arg1()
 		{
-			return v1;
+			return _v1;
 		}
 	}
 }

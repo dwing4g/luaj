@@ -15,7 +15,7 @@ import org.luaj.vm2.LuaValue;
  * @see CoerceJavaToLua
  * @see CoerceLuaToJava
  */
-class JavaArray extends LuaUserdata
+final class JavaArray extends LuaUserdata
 {
 	static final LuaValue LENGTH = valueOf("length");
 
@@ -28,12 +28,12 @@ class JavaArray extends LuaUserdata
 	public LuaValue get(LuaValue key)
 	{
 		if(key.equals(LENGTH))
-		    return valueOf(Array.getLength(m_instance));
+		    return valueOf(Array.getLength(_instance));
 		if(key.isint())
 		{
 			int i = key.toint() - 1;
-			return i >= 0 && i < Array.getLength(m_instance) ?
-			        CoerceJavaToLua.coerce(Array.get(m_instance, key.toint() - 1)) : NIL;
+			return i >= 0 && i < Array.getLength(_instance) ?
+			        CoerceJavaToLua.coerce(Array.get(_instance, key.toint() - 1)) : NIL;
 		}
 		return super.get(key);
 	}
@@ -44,9 +44,9 @@ class JavaArray extends LuaUserdata
 		if(key.isint())
 		{
 			int i = key.toint() - 1;
-			if(i >= 0 && i < Array.getLength(m_instance))
-				Array.set(m_instance, i, CoerceLuaToJava.coerce(value, m_instance.getClass().getComponentType()));
-			else if(m_metatable == null || !settable(this, key, value))
+			if(i >= 0 && i < Array.getLength(_instance))
+				Array.set(_instance, i, CoerceLuaToJava.coerce(value, _instance.getClass().getComponentType()));
+			else if(_metatable == null || !settable(this, key, value))
 			    error("array index out of bounds");
 		}
 		else

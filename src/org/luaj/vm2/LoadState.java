@@ -35,33 +35,57 @@ import java.io.InputStream;
 * @see LuaCompiler
 * @see LuaClosure
 * @see LuaFunction
-* @see LoadState#compiler
+* @see LoadState#s_compiler
 * @see LoadState#load(InputStream, String, LuaValue)
 */
-public class LoadState
+public final class LoadState
 {
 	/** format corresponding to non-number-patched lua, all numbers are floats or doubles */
-	public static final int NUMBER_FORMAT_FLOATS_OR_DOUBLES = 0;
+	public static final int          NUMBER_FORMAT_FLOATS_OR_DOUBLES = 0;
 
 	/** format corresponding to non-number-patched lua, all numbers are ints */
-	public static final int NUMBER_FORMAT_INTS_ONLY         = 1;
+	public static final int          NUMBER_FORMAT_INTS_ONLY         = 1;
 
 	/** format corresponding to number-patched lua, all numbers are 32-bit (4 byte) ints */
-	public static final int NUMBER_FORMAT_NUM_PATCH_INT32   = 4;
+	public static final int          NUMBER_FORMAT_NUM_PATCH_INT32   = 4;
 
 	// type constants
-	public static final int LUA_TINT                        = (-2);
-	public static final int LUA_TNONE                       = (-1);
-	public static final int LUA_TNIL                        = 0;
-	public static final int LUA_TBOOLEAN                    = 1;
-	public static final int LUA_TLIGHTUSERDATA              = 2;
-	public static final int LUA_TNUMBER                     = 3;
-	public static final int LUA_TSTRING                     = 4;
-	public static final int LUA_TTABLE                      = 5;
-	public static final int LUA_TFUNCTION                   = 6;
-	public static final int LUA_TUSERDATA                   = 7;
-	public static final int LUA_TTHREAD                     = 8;
-	public static final int LUA_TVALUE                      = 9;
+	public static final int          LUA_TINT                        = -2;
+	public static final int          LUA_TNONE                       = -1;
+	public static final int          LUA_TNIL                        = 0;
+	public static final int          LUA_TBOOLEAN                    = 1;
+	public static final int          LUA_TLIGHTUSERDATA              = 2;
+	public static final int          LUA_TNUMBER                     = 3;
+	public static final int          LUA_TSTRING                     = 4;
+	public static final int          LUA_TTABLE                      = 5;
+	public static final int          LUA_TFUNCTION                   = 6;
+	public static final int          LUA_TUSERDATA                   = 7;
+	public static final int          LUA_TTHREAD                     = 8;
+	public static final int          LUA_TVALUE                      = 9;
+
+	private static final LuaValue[]  NOVALUES                        = {};
+	private static final Prototype[] NOPROTOS                        = {};
+	private static final LocVars[]   NOLOCVARS                       = {};
+	private static final LuaString[] NOSTRVALUES                     = {};
+	private static final int[]       NOINTS                          = {};
+
+	/** Signature byte indicating the file is a compiled binary chunk */
+	private static final byte[]      LUA_SIGNATURE                   = { '\033', 'L', 'u', 'a' };
+
+	/** Name for compiled chunks */
+	public static final String       SOURCE_BINARY_STRING            = "binary string";
+
+	/** for header of binary files -- this is Lua 5.1 */
+	public static final int          LUAC_VERSION                    = 0x51;
+
+	/** for header of binary files -- this is the official format */
+	public static final int          LUAC_FORMAT                     = 0;
+
+	/** size of header of binary files */
+	public static final int          LUAC_HEADERSIZE                 = 12;
+
+	/** Compiler instance, if installed */
+	public static LuaCompiler        s_compiler;
 
 	/** Interface for the compiler, if it is installed.
 	 * <p>
@@ -77,49 +101,25 @@ public class LoadState
 		public LuaFunction load(InputStream stream, String filename, LuaValue env) throws IOException;
 	}
 
-	/** Compiler instance, if installed */
-	public static LuaCompiler        compiler             = null;
-
-	/** Signature byte indicating the file is a compiled binary chunk */
-	private static final byte[]      LUA_SIGNATURE        = { '\033', 'L', 'u', 'a' };
-
-	/** Name for compiled chunks */
-	public static final String       SOURCE_BINARY_STRING = "binary string";
-
-	/** for header of binary files -- this is Lua 5.1 */
-	public static final int          LUAC_VERSION         = 0x51;
-
-	/** for header of binary files -- this is the official format */
-	public static final int          LUAC_FORMAT          = 0;
-
-	/** size of header of binary files */
-	public static final int          LUAC_HEADERSIZE      = 12;
-
-	private boolean                  luacLittleEndian;
-	private int                      luacSizeofSizeT;
-	private int                      luacNumberFormat;
-
 	/** input stream from which we are loading */
-	public final DataInputStream     is;
-
-	private static final LuaValue[]  NOVALUES             = {};
-	private static final Prototype[] NOPROTOS             = {};
-	private static final LocVars[]   NOLOCVARS            = {};
-	private static final LuaString[] NOSTRVALUES          = {};
-	private static final int[]       NOINTS               = {};
+	private final DataInputStream _is;
 
 	/** Read buffer */
-	private byte[]                   buf                  = new byte[512];
+	private byte[]                _buf = new byte[512];
+
+	private int                   _luacSizeofSizeT;
+	private int                   _luacNumberFormat;
+	private boolean               _luacLittleEndian;
 
 	/** Load a 4-byte int value from the input stream
 	 * @return the int value laoded.
 	 **/
 	private int loadInt() throws IOException
 	{
-		is.readFully(buf, 0, 4);
-		return luacLittleEndian ?
-		        (buf[3] << 24) | ((0xff & buf[2]) << 16) | ((0xff & buf[1]) << 8) | (0xff & buf[0]) :
-		        (buf[0] << 24) | ((0xff & buf[1]) << 16) | ((0xff & buf[2]) << 8) | (0xff & buf[3]);
+		_is.readFully(_buf, 0, 4);
+		return _luacLittleEndian ?
+		        (_buf[3] << 24) | ((0xff & _buf[2]) << 16) | ((0xff & _buf[1]) << 8) | (0xff & _buf[0]) :
+		        (_buf[0] << 24) | ((0xff & _buf[1]) << 16) | ((0xff & _buf[2]) << 8) | (0xff & _buf[3]);
 	}
 
 	/** Load an array of int values from the input stream
@@ -133,14 +133,14 @@ public class LoadState
 
 		// read all data at once
 		int m = n << 2;
-		if(buf.length < m)
-		    buf = new byte[m];
-		is.readFully(buf, 0, m);
+		if(_buf.length < m)
+		    _buf = new byte[m];
+		_is.readFully(_buf, 0, m);
 		int[] array = new int[n];
 		for(int i = 0, j = 0; i < n; ++i, j += 4)
-			array[i] = luacLittleEndian ?
-			        (buf[j + 3] << 24) | ((0xff & buf[j + 2]) << 16) | ((0xff & buf[j + 1]) << 8) | (0xff & buf[j + 0]) :
-			        (buf[j + 0] << 24) | ((0xff & buf[j + 1]) << 16) | ((0xff & buf[j + 2]) << 8) | (0xff & buf[j + 3]);
+			array[i] = _luacLittleEndian ?
+			        (_buf[j + 3] << 24) | ((0xff & _buf[j + 2]) << 16) | ((0xff & _buf[j + 1]) << 8) | (0xff & _buf[j + 0]) :
+			        (_buf[j + 0] << 24) | ((0xff & _buf[j + 1]) << 16) | ((0xff & _buf[j + 2]) << 8) | (0xff & _buf[j + 3]);
 
 		return array;
 	}
@@ -151,7 +151,7 @@ public class LoadState
 	private long loadInt64() throws IOException
 	{
 		int a, b;
-		if(this.luacLittleEndian)
+		if(_luacLittleEndian)
 		{
 			a = loadInt();
 			b = loadInt();
@@ -169,11 +169,11 @@ public class LoadState
 	 **/
 	private LuaString loadString() throws IOException
 	{
-		int size = this.luacSizeofSizeT == 8 ? (int)loadInt64() : loadInt();
+		int size = _luacSizeofSizeT == 8 ? (int)loadInt64() : loadInt();
 		if(size == 0)
 		    return null;
 		byte[] bytes = new byte[size];
-		is.readFully(bytes, 0, size);
+		_is.readFully(bytes, 0, size);
 		return LuaString.valueOf(bytes, 0, bytes.length - 1);
 	}
 
@@ -213,7 +213,7 @@ public class LoadState
 	 */
 	private LuaValue loadNumber() throws IOException
 	{
-		if(luacNumberFormat == NUMBER_FORMAT_INTS_ONLY)
+		if(_luacNumberFormat == NUMBER_FORMAT_INTS_ONLY)
 		    return LuaInteger.valueOf(loadInt());
 		return longBitsToLuaNumber(loadInt64());
 	}
@@ -229,13 +229,13 @@ public class LoadState
 		LuaValue[] values = n > 0 ? new LuaValue[n] : NOVALUES;
 		for(int i = 0; i < n; i++)
 		{
-			switch(is.readByte())
+			switch(_is.readByte())
 			{
 				case LUA_TNIL:
 					values[i] = LuaValue.NIL;
 					break;
 				case LUA_TBOOLEAN:
-					values[i] = (0 != is.readUnsignedByte() ? LuaValue.TRUE : LuaValue.FALSE);
+					values[i] = (0 != _is.readUnsignedByte() ? LuaValue.TRUE : LuaValue.FALSE);
 					break;
 				case LUA_TINT:
 					values[i] = LuaInteger.valueOf(loadInt());
@@ -294,25 +294,25 @@ public class LoadState
 	public Prototype loadFunction(LuaString p) throws IOException
 	{
 		Prototype f = new Prototype();
-//		this.L.push(f);
+//		L.push(f);
 		f.source = loadString();
 		if(f.source == null)
 		    f.source = p;
 		f.linedefined = loadInt();
 		f.lastlinedefined = loadInt();
-		f.nups = is.readUnsignedByte();
-		f.numparams = is.readUnsignedByte();
-		f.is_vararg = is.readUnsignedByte();
-		f.maxstacksize = is.readUnsignedByte();
+		f.nups = _is.readUnsignedByte();
+		f.numparams = _is.readUnsignedByte();
+		f.is_vararg = _is.readUnsignedByte();
+		f.maxstacksize = _is.readUnsignedByte();
 		f.code = loadIntArray();
 		loadConstants(f);
 		loadDebug(f);
 
 		// TODO: add check here, for debugging purposes, I believe
 		// see ldebug.c
-//		 IF (!luaG_checkcode(f), "bad code");
+//		IF (!luaG_checkcode(f), "bad code");
 
-//		 this.L.pop();
+//		L.pop();
 		return f;
 	}
 
@@ -322,14 +322,14 @@ public class LoadState
 	 */
 	public void loadHeader() throws IOException
 	{
-		is.readByte();
-		is.readByte();
-		luacLittleEndian = (0 != is.readByte());
-		is.readByte();
-		luacSizeofSizeT = is.readByte();
-		is.readByte();
-		is.readByte();
-		luacNumberFormat = is.readByte();
+		_is.readByte();
+		_is.readByte();
+		_luacLittleEndian = (_is.readByte() != 0);
+		_is.readByte();
+		_luacSizeofSizeT = _is.readByte();
+		_is.readByte();
+		_is.readByte();
+		_luacNumberFormat = _is.readByte();
 	}
 
 	/**
@@ -343,8 +343,8 @@ public class LoadState
 	 */
 	public static LuaFunction load(InputStream stream, String name, LuaValue env) throws IOException
 	{
-		if(compiler != null)
-		    return compiler.load(stream, name, env);
+		if(s_compiler != null)
+		    return s_compiler.load(stream, name, env);
 		int firstByte = stream.read();
 		if(firstByte != LUA_SIGNATURE[0])
 		    throw new LuaError("no compiler");
@@ -376,7 +376,7 @@ public class LoadState
 		s.loadHeader();
 
 		// check format
-		switch(s.luacNumberFormat)
+		switch(s._luacNumberFormat)
 		{
 			case NUMBER_FORMAT_FLOATS_OR_DOUBLES:
 			case NUMBER_FORMAT_INTS_ONLY:
@@ -406,6 +406,6 @@ public class LoadState
 	/** Private constructor for create a load state */
 	private LoadState(InputStream stream)
 	{
-		this.is = new DataInputStream(stream);
+		_is = new DataInputStream(stream);
 	}
 }

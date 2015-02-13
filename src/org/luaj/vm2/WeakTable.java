@@ -12,9 +12,9 @@ import org.luaj.vm2.lib.LibFunction2;
  * However, calling the constructors directly when weak tables are required from
  * Java will reduce overhead.
  */
-public class WeakTable extends LuaTable
+public final class WeakTable extends LuaTable
 {
-	private boolean weakkeys, weakvalues;
+	private boolean _weakkeys, _weakvalues;
 
 	/**
 	 * Construct a table with weak keys, weak values, or both
@@ -36,8 +36,8 @@ public class WeakTable extends LuaTable
 	protected WeakTable(boolean weakkeys, boolean weakvalues, int narray, int nhash)
 	{
 		super(narray, nhash);
-		this.weakkeys = weakkeys;
-		this.weakvalues = weakvalues;
+		_weakkeys = weakkeys;
+		_weakvalues = weakvalues;
 	}
 
 	/**
@@ -53,7 +53,7 @@ public class WeakTable extends LuaTable
 		LuaValue k = NIL;
 		while(!(k = ((n = source.next(k)).arg1())).isnil())
 			rawset(k, n.arg(2));
-		m_metatable = source.m_metatable;
+		_metatable = source._metatable;
 	}
 
 	@Override
@@ -88,8 +88,8 @@ public class WeakTable extends LuaTable
 	@Override
 	protected LuaTable changemode(boolean v_weakkeys, boolean v_weakvalues)
 	{
-		weakkeys = v_weakkeys;
-		weakvalues = v_weakvalues;
+		_weakkeys = v_weakkeys;
+		_weakvalues = v_weakvalues;
 		return this;
 	}
 
@@ -116,7 +116,7 @@ public class WeakTable extends LuaTable
 	@Override
 	public void rawset(int key, LuaValue value)
 	{
-		if(weakvalues)
+		if(_weakvalues)
 		    value = weaken(value);
 		super.rawset(key, value);
 	}
@@ -124,9 +124,9 @@ public class WeakTable extends LuaTable
 	@Override
 	public void rawset(LuaValue key, LuaValue value)
 	{
-		if(weakvalues)
+		if(_weakvalues)
 		    value = weaken(value);
-		if(weakkeys)
+		if(_weakkeys)
 		{
 			switch(key.type())
 			{
@@ -161,12 +161,12 @@ public class WeakTable extends LuaTable
 	@Override
 	protected LuaValue hashget(LuaValue key)
 	{
-		if(hashEntries > 0)
+		if(_hashEntries > 0)
 		{
 			int i = hashFindSlot(key);
-			if(hashEntries == 0)
+			if(_hashEntries == 0)
 			    return NIL;
-			LuaValue v = hashValues[i];
+			LuaValue v = _hashValues[i];
 			return v != null ? v : NIL;
 		}
 		return NIL;
@@ -176,21 +176,21 @@ public class WeakTable extends LuaTable
 	@Override
 	public int hashFindSlot(LuaValue key)
 	{
-		int i = (key.hashCode() & 0x7FFFFFFF) % hashKeys.length;
+		int i = (key.hashCode() & 0x7FFFFFFF) % _hashKeys.length;
 		LuaValue k;
-		while((k = hashKeys[i]) != null)
+		while((k = _hashKeys[i]) != null)
 		{
 			if(k.isweaknil())
 			{
 				hashClearSlot(i);
-				if(hashEntries == 0)
+				if(_hashEntries == 0)
 				    return 0;
 			}
 			else
 			{
 				if(k.raweq(key.strongkey()))
 				    return i;
-				i = (i + 1) % hashKeys.length;
+				i = (i + 1) % _hashKeys.length;
 			}
 		}
 		return i;
@@ -245,9 +245,9 @@ public class WeakTable extends LuaTable
 	/** Internal class to implement weak values.
 	 * @see WeakTable
 	 */
-	static class WeakValue extends LuaValue
+	private static class WeakValue extends LuaValue
 	{
-		final WeakReference<LuaValue> ref;
+		protected final WeakReference<LuaValue> ref;
 
 		protected WeakValue(LuaValue value)
 		{
@@ -298,7 +298,7 @@ public class WeakTable extends LuaTable
 	/** Internal class to implement weak userdata values.
 	 * @see WeakTable
 	 */
-	static final class WeakUserdata extends WeakValue
+	private static final class WeakUserdata extends WeakValue
 	{
 		private final WeakReference<Object> ob;
 		private final LuaValue              mt;
@@ -341,33 +341,33 @@ public class WeakTable extends LuaTable
 	/** Internal class to implement weak table entries.
 	 * @see WeakTable
 	 */
-	static final class WeakEntry extends LuaValue
+	private static final class WeakEntry extends LuaValue
 	{
-		final LuaValue weakkey;
-		LuaValue       weakvalue;
-		final int      keyhash;
+		private final LuaValue _weakkey;
+		private LuaValue       _weakvalue;
+		private final int      _keyhash;
 
 		private WeakEntry(LuaValue key, LuaValue weakvalue)
 		{
-			this.weakkey = weaken(key);
-			this.keyhash = key.hashCode();
-			this.weakvalue = weakvalue;
+			_weakkey = weaken(key);
+			_keyhash = key.hashCode();
+			_weakvalue = weakvalue;
 		}
 
 		@Override
 		public LuaValue strongkey()
 		{
-			return weakkey.strongvalue();
+			return _weakkey.strongvalue();
 		}
 
 		// when looking up the value, look in the keys metatable
 		@Override
 		public LuaValue strongvalue()
 		{
-			LuaValue key = weakkey.strongvalue();
+			LuaValue key = _weakkey.strongvalue();
 			if(key.isnil())
-			    return weakvalue = NIL;
-			return weakvalue.strongvalue();
+			    return _weakvalue = NIL;
+			return _weakvalue.strongvalue();
 		}
 
 		@Override
@@ -386,26 +386,26 @@ public class WeakTable extends LuaTable
 		@Override
 		public String toString()
 		{
-			return "weak<" + weakkey.strongvalue() + "," + strongvalue() + ">";
+			return "weak<" + _weakkey.strongvalue() + "," + strongvalue() + ">";
 		}
 
 		@Override
 		public int hashCode()
 		{
-			return keyhash;
+			return _keyhash;
 		}
 
 		@Override
 		public boolean raweq(LuaValue rhs)
 		{
 			//return rhs.raweq(weakkey.strongvalue());
-			return weakkey.raweq(rhs);
+			return _weakkey.raweq(rhs);
 		}
 
 		@Override
 		public boolean isweaknil()
 		{
-			return weakkey.isweaknil() || weakvalue.isweaknil();
+			return _weakkey.isweaknil() || _weakvalue.isweaknil();
 		}
 	}
 }

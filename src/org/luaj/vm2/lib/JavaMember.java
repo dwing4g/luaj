@@ -18,10 +18,10 @@ import org.luaj.vm2.lib.CoerceLuaToJava.Coercion;
  */
 abstract class JavaMember extends LibFunctionV
 {
-	static final int METHOD_MODIFIERS_VARARGS = 0x80;
+	private static final int METHOD_MODIFIERS_VARARGS = 0x80;
 
-	final Coercion[] fixedargs;
-	final Coercion   varargs;
+	private final Coercion[] fixedargs;
+	private final Coercion   varargs;
 
 	protected JavaMember(Class<?>[] params, int modifiers)
 	{

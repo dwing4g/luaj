@@ -18,22 +18,22 @@ package org.luaj.vm2;
  * execution framework.
  * @see Prototype
  */
-public class VarargsTailcall extends Varargs
+public final class VarargsTailcall extends Varargs
 {
-	private LuaValue func;
-	private Varargs  args;
-	private Varargs  result;
+	private LuaValue _func;
+	private Varargs  _args;
+	private Varargs  _result;
 
 	public VarargsTailcall(LuaValue f, Varargs args)
 	{
-		this.func = f;
-		this.args = args;
+		_func = f;
+		_args = args;
 	}
 
 	public VarargsTailcall(LuaValue object, LuaValue methodname, Varargs args)
 	{
-		this.func = object.get(methodname);
-		this.args = LuaValue.varargsOf(object, args);
+		_func = object.get(methodname);
+		_args = LuaValue.varargsOf(object, args);
 	}
 
 	@Override
@@ -45,46 +45,46 @@ public class VarargsTailcall extends Varargs
 	@Override
 	public Varargs eval()
 	{
-		while(result == null)
+		while(_result == null)
 		{
-			Varargs r = func.onInvoke(args);
+			Varargs r = _func.onInvoke(_args);
 			if(r.isTailcall())
 			{
 				VarargsTailcall t = (VarargsTailcall)r;
-				func = t.func;
-				args = t.args;
+				_func = t._func;
+				_args = t._args;
 			}
 			else
 			{
-				result = r;
-				func = null;
-				args = null;
+				_result = r;
+				_func = null;
+				_args = null;
 			}
 		}
-		return result;
+		return _result;
 	}
 
 	@Override
 	public LuaValue arg(int i)
 	{
-		if(result == null)
+		if(_result == null)
 		    eval();
-		return result.arg(i);
+		return _result.arg(i);
 	}
 
 	@Override
 	public LuaValue arg1()
 	{
-		if(result == null)
+		if(_result == null)
 		    eval();
-		return result.arg1();
+		return _result.arg1();
 	}
 
 	@Override
 	public int narg()
 	{
-		if(result == null)
+		if(_result == null)
 		    eval();
-		return result.narg();
+		return _result.narg();
 	}
 }

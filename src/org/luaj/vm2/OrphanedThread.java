@@ -15,7 +15,7 @@ package org.luaj.vm2;
  * handling could break the thread-safety of the application because other lua
  * processing could be going on in a different thread.
  */
-public class OrphanedThread extends Error
+public final class OrphanedThread extends Error
 {
 	private static final long serialVersionUID = 1L;
 

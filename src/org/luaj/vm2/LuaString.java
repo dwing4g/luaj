@@ -31,29 +31,29 @@ import org.luaj.vm2.lib.LibString;
  * {@link LuaString#decodeAsUtf8(byte[], int, int)
  * are used to convert back and forth between UTF8 byte arrays and character arrays.
  */
-public class LuaString extends LuaValue
+public final class LuaString extends LuaValue
 {
 	/** The singleton instance representing lua {@code true} */
 	public static LuaValue                                         s_metatable;
 
 	/** The bytes for the string */
-	public final byte[]                                            m_bytes;
+	public final byte[]                                            _bytes;
 
 	/** The offset into the byte array, 0 means start at the first byte */
-	public final int                                               m_offset;
+	public final int                                               _offset;
 
 	/** The number of bytes that comprise this string */
-	public final int                                               m_length;
+	public final int                                               _length;
 
 	private static final HashMap<String, WeakReference<LuaString>> index_java = new HashMap<String, WeakReference<LuaString>>();
 
-	private static final LuaString index_get(HashMap<String, WeakReference<LuaString>> indextable, String key)
+	private static LuaString index_get(HashMap<String, WeakReference<LuaString>> indextable, String key)
 	{
 		WeakReference<LuaString> w = indextable.get(key);
 		return w != null ? (LuaString)w.get() : null;
 	}
 
-	private static final void index_set(HashMap<String, WeakReference<LuaString>> indextable, String key, LuaString value)
+	private static void index_set(HashMap<String, WeakReference<LuaString>> indextable, String key, LuaString value)
 	{
 		indextable.put(key, new WeakReference<LuaString>(value));
 	}
@@ -130,9 +130,9 @@ public class LuaString extends LuaValue
 	 */
 	private LuaString(byte[] bytes, int offset, int length)
 	{
-		this.m_bytes = bytes;
-		this.m_offset = offset;
-		this.m_length = length;
+		_bytes = bytes;
+		_offset = offset;
+		_length = length;
 	}
 
 	@Override
@@ -162,7 +162,7 @@ public class LuaString extends LuaValue
 	@Override
 	public String tojstring()
 	{
-		return decodeAsUtf8(m_bytes, m_offset, m_length);
+		return decodeAsUtf8(_bytes, _offset, _length);
 	}
 
 	// get is delegated to the string library
@@ -452,9 +452,9 @@ public class LuaString extends LuaValue
 	@Override
 	public LuaValue concatTo(LuaString lhs)
 	{
-		byte[] b = new byte[lhs.m_length + this.m_length];
-		System.arraycopy(lhs.m_bytes, lhs.m_offset, b, 0, lhs.m_length);
-		System.arraycopy(this.m_bytes, this.m_offset, b, lhs.m_length, this.m_length);
+		byte[] b = new byte[lhs._length + _length];
+		System.arraycopy(lhs._bytes, lhs._offset, b, 0, lhs._length);
+		System.arraycopy(_bytes, _offset, b, lhs._length, _length);
 		return new LuaString(b, 0, b.length);
 	}
 
@@ -468,12 +468,12 @@ public class LuaString extends LuaValue
 	@Override
 	public int strcmp(LuaString rhs)
 	{
-		for(int i = 0, j = 0; i < m_length && j < rhs.m_length; ++i, ++j)
+		for(int i = 0, j = 0; i < _length && j < rhs._length; ++i, ++j)
 		{
-			if(m_bytes[m_offset + i] != rhs.m_bytes[rhs.m_offset + j])
-			    return m_bytes[m_offset + i] - rhs.m_bytes[rhs.m_offset + j];
+			if(_bytes[_offset + i] != rhs._bytes[rhs._offset + j])
+			    return _bytes[_offset + i] - rhs._bytes[rhs._offset + j];
 		}
-		return m_length - rhs.m_length;
+		return _length - rhs._length;
 	}
 
 	/** Check for number in arithmetic, or throw aritherror */
@@ -659,16 +659,16 @@ public class LuaString extends LuaValue
 
 	public LuaString substring(int beginIndex, int endIndex)
 	{
-		return new LuaString(m_bytes, m_offset + beginIndex, endIndex - beginIndex);
+		return new LuaString(_bytes, _offset + beginIndex, endIndex - beginIndex);
 	}
 
 	@Override
 	public int hashCode()
 	{
-		int h = m_length; /* seed */
-		int step = (m_length >> 5) + 1; /* if string is too long, don't hash all its chars */
-		for(int l1 = m_length; l1 >= step; l1 -= step)
-			h = h ^ ((h << 5) + (h >> 2) + (m_bytes[m_offset + l1 - 1] & 0x0FF));
+		int h = _length; /* seed */
+		int step = (_length >> 5) + 1; /* if string is too long, don't hash all its chars */
+		for(int l1 = _length; l1 >= step; l1 -= step)
+			h = h ^ ((h << 5) + (h >> 2) + (_bytes[_offset + l1 - 1] & 0x0FF));
 		return h;
 	}
 
@@ -704,21 +704,21 @@ public class LuaString extends LuaValue
 	{
 		if(this == s)
 		    return true;
-		if(s.m_length != m_length)
+		if(s._length != _length)
 		    return false;
-		if(s.m_bytes == m_bytes && s.m_offset == m_offset)
+		if(s._bytes == _bytes && s._offset == _offset)
 		    return true;
 		if(s.hashCode() != hashCode())
 		    return false;
-		for(int i = 0; i < m_length; i++)
-			if(s.m_bytes[s.m_offset + i] != m_bytes[m_offset + i])
+		for(int i = 0; i < _length; i++)
+			if(s._bytes[s._offset + i] != _bytes[_offset + i])
 			    return false;
 		return true;
 	}
 
 	public static boolean equals(LuaString a, int i, LuaString b, int j, int n)
 	{
-		return equals(a.m_bytes, a.m_offset + i, b.m_bytes, b.m_offset + j, n);
+		return equals(a._bytes, a._offset + i, b._bytes, b._offset + j, n);
 	}
 
 	public static boolean equals(byte[] a, int i, byte[] b, int j, int n)
@@ -733,29 +733,29 @@ public class LuaString extends LuaValue
 
 	public void write(DataOutputStream writer, int i, int len) throws IOException
 	{
-		writer.write(m_bytes, m_offset + i, len);
+		writer.write(_bytes, _offset + i, len);
 	}
 
 	@Override
 	public LuaValue len()
 	{
-		return LuaInteger.valueOf(m_length);
+		return LuaInteger.valueOf(_length);
 	}
 
 	@Override
 	public int length()
 	{
-		return m_length;
+		return _length;
 	}
 
 	public int luaByte(int index)
 	{
-		return m_bytes[m_offset + index] & 0x0FF;
+		return _bytes[_offset + index] & 0x0FF;
 	}
 
 	public int charAt(int index)
 	{
-		if(index < 0 || index >= m_length)
+		if(index < 0 || index >= _length)
 		    throw new IndexOutOfBoundsException();
 		return luaByte(index);
 	}
@@ -778,7 +778,7 @@ public class LuaString extends LuaValue
 	 */
 	public InputStream toInputStream()
 	{
-		return new ByteArrayInputStream(m_bytes, m_offset, m_length);
+		return new ByteArrayInputStream(_bytes, _offset, _length);
 	}
 
 	/**
@@ -790,7 +790,7 @@ public class LuaString extends LuaValue
 	 */
 	public void copyInto(int strOffset, byte[] bytes, int arrayOffset, int len)
 	{
-		System.arraycopy(m_bytes, m_offset + strOffset, bytes, arrayOffset, len);
+		System.arraycopy(_bytes, _offset + strOffset, bytes, arrayOffset, len);
 	}
 
 	/** Java version of strpbrk - find index of any byte that in an accept string.
@@ -799,15 +799,15 @@ public class LuaString extends LuaValue
 	 */
 	public int indexOfAny(LuaString accept)
 	{
-		final int ilimit = m_offset + m_length;
-		final int jlimit = accept.m_offset + accept.m_length;
-		for(int i = m_offset; i < ilimit; ++i)
+		final int ilimit = _offset + _length;
+		final int jlimit = accept._offset + accept._length;
+		for(int i = _offset; i < ilimit; ++i)
 		{
-			for(int j = accept.m_offset; j < jlimit; ++j)
+			for(int j = accept._offset; j < jlimit; ++j)
 			{
-				if(m_bytes[i] == accept.m_bytes[j])
+				if(_bytes[i] == accept._bytes[j])
 				{
-					return i - m_offset;
+					return i - _offset;
 				}
 			}
 		}
@@ -822,9 +822,9 @@ public class LuaString extends LuaValue
 	 */
 	public int indexOf(byte b, int start)
 	{
-		for(int i = 0, j = m_offset + start; i < m_length; ++i)
+		for(int i = 0, j = _offset + start; i < _length; ++i)
 		{
-			if(m_bytes[j++] == b)
+			if(_bytes[j++] == b)
 			    return i;
 		}
 		return -1;
@@ -839,10 +839,10 @@ public class LuaString extends LuaValue
 	public int indexOf(LuaString s, int start)
 	{
 		final int slen = s.length();
-		final int limit = m_offset + m_length - slen;
-		for(int i = m_offset + start; i <= limit; ++i)
+		final int limit = _offset + _length - slen;
+		for(int i = _offset + start; i <= limit; ++i)
 		{
-			if(equals(m_bytes, i, s.m_bytes, s.m_offset, slen))
+			if(equals(_bytes, i, s._bytes, s._offset, slen))
 			{
 				return i;
 			}
@@ -858,10 +858,10 @@ public class LuaString extends LuaValue
 	public int lastIndexOf(LuaString s)
 	{
 		final int slen = s.length();
-		final int limit = m_offset + m_length - slen;
-		for(int i = limit; i >= m_offset; --i)
+		final int limit = _offset + _length - slen;
+		for(int i = limit; i >= _offset; --i)
 		{
-			if(equals(m_bytes, i, s.m_bytes, s.m_offset, slen))
+			if(equals(_bytes, i, s._bytes, s._offset, slen))
 			{
 				return i;
 			}
@@ -969,17 +969,17 @@ public class LuaString extends LuaValue
 	public boolean isValidUtf8()
 	{
 		int i, j;
-		for(i = m_offset, j = m_offset + m_length; i < j;)
+		for(i = _offset, j = _offset + _length; i < j;)
 		{
-			int c = m_bytes[i++];
+			int c = _bytes[i++];
 			if(c >= 0) continue;
 			if(((c & 0xE0) == 0xC0)
 			        && i < j
-			        && (m_bytes[i++] & 0xC0) == 0x80) continue;
+			        && (_bytes[i++] & 0xC0) == 0x80) continue;
 			if(((c & 0xF0) == 0xE0)
 			        && i + 1 < j
-			        && (m_bytes[i++] & 0xC0) == 0x80
-			        && (m_bytes[i++] & 0xC0) == 0x80) continue;
+			        && (_bytes[i++] & 0xC0) == 0x80
+			        && (_bytes[i++] & 0xC0) == 0x80) continue;
 			return false;
 		}
 		return true;
@@ -1008,14 +1008,14 @@ public class LuaString extends LuaValue
 	{
 		if(base >= 2 && base <= 36)
 		{
-			int i = m_offset, j = m_offset + m_length;
-			while(i < j && m_bytes[i] == ' ')
+			int i = _offset, j = _offset + _length;
+			while(i < j && _bytes[i] == ' ')
 				++i;
-			while(i < j && m_bytes[j - 1] == ' ')
+			while(i < j && _bytes[j - 1] == ' ')
 				--j;
 			if(i >= j)
 			    return Double.NaN;
-			if((base == 10 || base == 16) && (m_bytes[i] == '0' && i + 1 < j && (m_bytes[i + 1] == 'x' || m_bytes[i + 1] == 'X')))
+			if((base == 10 || base == 16) && (_bytes[i] == '0' && i + 1 < j && (_bytes[i + 1] == 'x' || _bytes[i + 1] == 'X')))
 			{
 				base = 16;
 				i += 2;
@@ -1038,11 +1038,11 @@ public class LuaString extends LuaValue
 	private double scanlong(int base, int start, int end)
 	{
 		long x = 0;
-		boolean neg = (m_bytes[start] == '-');
+		boolean neg = (_bytes[start] == '-');
 		for(int i = (neg ? start + 1 : start); i < end; i++)
 		{
-			int digit = m_bytes[i] - (base <= 10 || (m_bytes[i] >= '0' && m_bytes[i] <= '9') ? '0' :
-			        m_bytes[i] >= 'A' && m_bytes[i] <= 'Z' ? ('A' - 10) : ('a' - 10));
+			int digit = _bytes[i] - (base <= 10 || (_bytes[i] >= '0' && _bytes[i] <= '9') ? '0' :
+			        _bytes[i] >= 'A' && _bytes[i] <= 'Z' ? ('A' - 10) : ('a' - 10));
 			if(digit < 0 || digit >= base)
 			    return Double.NaN;
 			x = x * base + digit;
@@ -1062,7 +1062,7 @@ public class LuaString extends LuaValue
 		if(end > start + 64) end = start + 64;
 		for(int i = start; i < end; i++)
 		{
-			switch(m_bytes[i])
+			switch(_bytes[i])
 			{
 				case '-':
 				case '+':
@@ -1086,7 +1086,7 @@ public class LuaString extends LuaValue
 		}
 		char[] c = new char[end - start];
 		for(int i = start; i < end; i++)
-			c[i - start] = (char)m_bytes[i];
+			c[i - start] = (char)_bytes[i];
 		try
 		{
 			return Double.parseDouble(new String(c));

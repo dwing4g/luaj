@@ -11,12 +11,11 @@ import org.luaj.vm2.Prototype;
 import org.luaj.vm2.compiler.LexState.ConsControl;
 import org.luaj.vm2.compiler.LexState.expdesc;
 
-public class FuncState extends LuaC
+public final class FuncState extends LuaC
 {
-	class upvaldesc
+	static class UpValDesc
 	{
-		short k;
-		short info;
+		short k, info;
 	}
 
 	static class BlockCnt
@@ -28,26 +27,22 @@ public class FuncState extends LuaC
 		boolean  isbreakable; /* true if `block' is a loop */
 	}
 
-	Prototype                  _f;                                          /* current function header */
-	HashMap<LuaValue, Integer> htable;                                      /* table to find (and reuse) elements in `k' */
-	FuncState                  prev;                                        /* enclosing function */
-	LexState                   ls;                                          /* lexical state */
-	LuaC                       L;                                           /* compiler being invoked */
-	BlockCnt                   _bl;                                         /* chain of current blocks */
-	int                        _pc;                                         /* next position to code (equivalent to `ncode') */
-	int                        lasttarget;                                  /* `pc' of last `jump target' */
-	int                        _jpc;                                        /* list of pending jumps to `pc' */
-	int                        freereg;                                     /* first free register */
-	int                        nk;                                          /* number of elements in `k' */
-	int                        np;                                          /* number of elements in `p' */
-	short                      nlocvars;                                    /* number of elements in `locvars' */
-	short                      nactvar;                                     /* number of active local variables */
-	upvaldesc                  upvalues[] = new upvaldesc[LUAI_MAXUPVALUES]; /* upvalues */
-	short                      actvar[]   = new short[LUAI_MAXVARS];        /* declared-variable stack */
-
-	FuncState()
-	{
-	}
+	Prototype                  _f;                                        /* current function header */
+	HashMap<LuaValue, Integer> htable;                                    /* table to find (and reuse) elements in `k' */
+	FuncState                  prev;                                      /* enclosing function */
+	LexState                   ls;                                        /* lexical state */
+	LuaC                       L;                                         /* compiler being invoked */
+	BlockCnt                   _bl;                                       /* chain of current blocks */
+	int                        _pc;                                       /* next position to code (equivalent to `ncode') */
+	int                        lasttarget;                                /* `pc' of last `jump target' */
+	int                        _jpc;                                      /* list of pending jumps to `pc' */
+	int                        freereg;                                   /* first free register */
+	int                        nk;                                        /* number of elements in `k' */
+	int                        np;                                        /* number of elements in `p' */
+	short                      nlocvars;                                  /* number of elements in `locvars' */
+	short                      nactvar;                                   /* number of active local variables */
+	UpValDesc[]                upvalues = new UpValDesc[LUAI_MAXUPVALUES]; /* upvalues */
+	short[]                    actvar   = new short[LUAI_MAXVARS];        /* declared-variable stack */
 
 	// =============================================================
 	// from lcode.h
@@ -113,7 +108,7 @@ public class FuncState extends LuaC
 		    _f.upvalues = realloc(_f.upvalues, _f.nups * 2 + 1);
 		_f.upvalues[_f.nups] = name;
 		_assert(v._k == LexState.VLOCAL || v._k == LexState.VUPVAL);
-		upvalues[_f.nups] = new upvaldesc();
+		upvalues[_f.nups] = new UpValDesc();
 		upvalues[_f.nups].k = (short)(v._k);
 		upvalues[_f.nups].info = (short)(v.u.s.info);
 		return _f.nups++;
@@ -124,7 +119,7 @@ public class FuncState extends LuaC
 		int i;
 		for(i = nactvar - 1; i >= 0; i--)
 		{
-			if(n == getlocvar(i).varname)
+			if(n == getlocvar(i)._varname)
 			    return i;
 		}
 		return -1; /* not found */
@@ -167,36 +162,36 @@ public class FuncState extends LuaC
 	{
 		bl1.breaklist = LexState.NO_JUMP;
 		bl1.isbreakable = isbreakable;
-		bl1.nactvar = this.nactvar;
+		bl1.nactvar = nactvar;
 		bl1.upval = false;
-		bl1.previous = this._bl;
+		bl1.previous = _bl;
 		_bl = bl1;
-		_assert(this.freereg == this.nactvar);
+		_assert(freereg == nactvar);
 	}
 
 	void leaveblock()
 	{
-		BlockCnt bl = this._bl;
-		this._bl = bl.previous;
+		BlockCnt bl = _bl;
+		_bl = bl.previous;
 		ls.removevars(bl.nactvar);
 		if(bl.upval)
-		    this.codeABC(OP_CLOSE, bl.nactvar, 0, 0);
+		    codeABC(OP_CLOSE, bl.nactvar, 0, 0);
 		/* a block either controls scope or breaks (never both) */
 		_assert(!bl.isbreakable || !bl.upval);
-		_assert(bl.nactvar == this.nactvar);
-		this.freereg = this.nactvar; /* free registers */
-		this.patchtohere(bl.breaklist);
+		_assert(bl.nactvar == nactvar);
+		freereg = nactvar; /* free registers */
+		patchtohere(bl.breaklist);
 	}
 
 	void closelistfield(ConsControl cc)
 	{
 		if(cc.v._k == LexState.VVOID)
 		    return; /* there is no list item */
-		this.exp2nextreg(cc.v);
+		exp2nextreg(cc.v);
 		cc.v._k = LexState.VVOID;
 		if(cc.tostore == LFIELDS_PER_FLUSH)
 		{
-			this.setlist(cc.t.u.s.info, cc.na, cc.tostore); /* flush */
+			setlist(cc.t.u.s.info, cc.na, cc.tostore); /* flush */
 			cc.tostore = 0; /* no more items pending */
 		}
 	}
@@ -211,16 +206,16 @@ public class FuncState extends LuaC
 		if(cc.tostore == 0) return;
 		if(hasmultret(cc.v._k))
 		{
-			this.setmultret(cc.v);
-			this.setlist(cc.t.u.s.info, cc.na, LUA_MULTRET);
+			setmultret(cc.v);
+			setlist(cc.t.u.s.info, cc.na, LUA_MULTRET);
 			cc.na--;
 			/** do not count last expression (unknown number of elements) */
 		}
 		else
 		{
 			if(cc.v._k != LexState.VVOID)
-			    this.exp2nextreg(cc.v);
-			this.setlist(cc.t.u.s.info, cc.na, cc.tostore);
+			    exp2nextreg(cc.v);
+			setlist(cc.t.u.s.info, cc.na, cc.tostore);
 		}
 	}
 
@@ -231,16 +226,16 @@ public class FuncState extends LuaC
 	void nil(int from, int n)
 	{
 		InstructionPtr previous;
-		if(this._pc > this.lasttarget)
+		if(_pc > lasttarget)
 		{ /* no jumps to current position? */
-			if(this._pc == 0)
+			if(_pc == 0)
 			{ /* function start? */
-				if(from >= this.nactvar)
+				if(from >= nactvar)
 				    return; /* positions are already clean */
 			}
 			else
 			{
-				previous = new InstructionPtr(this._f.code, this._pc - 1);
+				previous = new InstructionPtr(_f.code, _pc - 1);
 				if(GET_OPCODE(previous.get()) == OP_LOADNIL)
 				{
 					int pfrom = GETARG_A(previous.get());
@@ -255,7 +250,7 @@ public class FuncState extends LuaC
 			}
 		}
 		/* else no optimization */
-		this.codeABC(OP_LOADNIL, from, from + n - 1, 0);
+		codeABC(OP_LOADNIL, from, from + n - 1, 0);
 	}
 
 	int jump()
@@ -280,7 +275,7 @@ public class FuncState extends LuaC
 
 	void fixjump(int pc, int dest)
 	{
-		InstructionPtr jmp = new InstructionPtr(this._f.code, pc);
+		InstructionPtr jmp = new InstructionPtr(_f.code, pc);
 		int offset = dest - (pc + 1);
 		_assert(dest != LexState.NO_JUMP);
 		if(Math.abs(offset) > MAXARG_sBx)
@@ -299,7 +294,7 @@ public class FuncState extends LuaC
 
 	int getjump(int pc)
 	{
-		int offset = GETARG_sBx(this._f.code[pc]);
+		int offset = GETARG_sBx(_f.code[pc]);
 		/* point to itself represents end of list */
 		if(offset == LexState.NO_JUMP)
 		    /* end of list */
@@ -322,9 +317,9 @@ public class FuncState extends LuaC
 	 */
 	boolean need_value(int list)
 	{
-		for(; list != LexState.NO_JUMP; list = this.getjump(list))
+		for(; list != LexState.NO_JUMP; list = getjump(list))
 		{
-			int i = this.getjumpcontrol(list).get();
+			int i = getjumpcontrol(list).get();
 			if(GET_OPCODE(i) != OP_TESTSET)
 			    return true;
 		}
@@ -333,7 +328,7 @@ public class FuncState extends LuaC
 
 	boolean patchtestreg(int node, int reg)
 	{
-		InstructionPtr i = this.getjumpcontrol(node);
+		InstructionPtr i = getjumpcontrol(node);
 		if(GET_OPCODE(i.get()) != OP_TESTSET)
 		    /* cannot patch other instructions */
 		    return false;
@@ -348,36 +343,36 @@ public class FuncState extends LuaC
 
 	void removevalues(int list)
 	{
-		for(; list != LexState.NO_JUMP; list = this.getjump(list))
-			this.patchtestreg(list, NO_REG);
+		for(; list != LexState.NO_JUMP; list = getjump(list))
+			patchtestreg(list, NO_REG);
 	}
 
 	void patchlistaux(int list, int vtarget, int reg, int dtarget)
 	{
 		while(list != LexState.NO_JUMP)
 		{
-			int next = this.getjump(list);
-			if(this.patchtestreg(list, reg))
-				this.fixjump(list, vtarget);
+			int next = getjump(list);
+			if(patchtestreg(list, reg))
+				fixjump(list, vtarget);
 			else
-				this.fixjump(list, dtarget); /* jump to default target */
+				fixjump(list, dtarget); /* jump to default target */
 			list = next;
 		}
 	}
 
 	void dischargejpc()
 	{
-		patchlistaux(_jpc, this._pc, NO_REG, this._pc);
+		patchlistaux(_jpc, _pc, NO_REG, _pc);
 		_jpc = LexState.NO_JUMP;
 	}
 
 	void patchlist(int list, int target)
 	{
-		if(target == this._pc)
+		if(target == _pc)
 			patchtohere(list);
 		else
 		{
-			_assert(target < this._pc);
+			_assert(target < _pc);
 			patchlistaux(list, target, NO_REG, target);
 		}
 	}
@@ -398,7 +393,7 @@ public class FuncState extends LuaC
 		{
 			int list = l1;
 			int next;
-			while((next = this.getjump(list)) != LexState.NO_JUMP)
+			while((next = getjump(list)) != LexState.NO_JUMP)
 				/* find last element */
 				list = next;
 			fixjump(list, l2);
@@ -408,58 +403,58 @@ public class FuncState extends LuaC
 
 	void checkstack(int n)
 	{
-		int newstack = this.freereg + n;
-		if(newstack > this._f.maxstacksize)
+		int newstack = freereg + n;
+		if(newstack > _f.maxstacksize)
 		{
 			if(newstack >= MAXSTACK)
 			    ls.syntaxerror("function or expression too complex");
-			this._f.maxstacksize = newstack;
+			_f.maxstacksize = newstack;
 		}
 	}
 
 	void reserveregs(int n)
 	{
-		this.checkstack(n);
-		this.freereg += n;
+		checkstack(n);
+		freereg += n;
 	}
 
 	void freereg(int reg)
 	{
-		if(!ISK(reg) && reg >= this.nactvar)
+		if(!ISK(reg) && reg >= nactvar)
 		{
-			this.freereg--;
-			_assert(reg == this.freereg);
+			freereg--;
+			_assert(reg == freereg);
 		}
 	}
 
 	void freeexp(expdesc e)
 	{
 		if(e._k == LexState.VNONRELOC)
-		    this.freereg(e.u.s.info);
+		    freereg(e.u.s.info);
 	}
 
 	int addk(LuaValue v)
 	{
 		int idx;
-		if(this.htable.containsKey(v))
+		if(htable.containsKey(v))
 		{
 			idx = htable.get(v).intValue();
 		}
 		else
 		{
-			idx = this.nk;
-			this.htable.put(v, new Integer(idx));
-			final Prototype f = this._f;
+			idx = nk;
+			htable.put(v, new Integer(idx));
+			Prototype f = _f;
 			if(f.k == null || nk + 1 >= f.k.length)
 			    f.k = realloc(f.k, nk * 2 + 1);
-			f.k[this.nk++] = v;
+			f.k[nk++] = v;
 		}
 		return idx;
 	}
 
 	int stringK(LuaString s)
 	{
-		return this.addk(s);
+		return addk(s);
 	}
 
 	int numberK(LuaValue r)
@@ -471,30 +466,30 @@ public class FuncState extends LuaC
 			if(d == i)
 			    r = LuaInteger.valueOf(i);
 		}
-		return this.addk(r);
+		return addk(r);
 	}
 
 	int boolK(boolean b)
 	{
-		return this.addk((b ? LuaValue.TRUE : LuaValue.FALSE));
+		return addk((b ? LuaValue.TRUE : LuaValue.FALSE));
 	}
 
 	int nilK()
 	{
-		return this.addk(LuaValue.NIL);
+		return addk(LuaValue.NIL);
 	}
 
 	void setreturns(expdesc e, int nresults)
 	{
 		if(e._k == LexState.VCALL)
 		{ /* expression is an open function call? */
-			SETARG_C(this.getcodePtr(e), nresults + 1);
+			SETARG_C(getcodePtr(e), nresults + 1);
 		}
 		else if(e._k == LexState.VVARARG)
 		{
-			SETARG_B(this.getcodePtr(e), nresults + 1);
-			SETARG_A(this.getcodePtr(e), this.freereg);
-			this.reserveregs(1);
+			SETARG_B(getcodePtr(e), nresults + 1);
+			SETARG_A(getcodePtr(e), freereg);
+			reserveregs(1);
 		}
 	}
 
@@ -503,11 +498,11 @@ public class FuncState extends LuaC
 		if(e._k == LexState.VCALL)
 		{ /* expression is an open function call? */
 			e._k = LexState.VNONRELOC;
-			e.u.s.info = GETARG_A(this.getcode(e));
+			e.u.s.info = GETARG_A(getcode(e));
 		}
 		else if(e._k == LexState.VVARARG)
 		{
-			SETARG_B(this.getcodePtr(e), 2);
+			SETARG_B(getcodePtr(e), 2);
 			e._k = LexState.VRELOCABLE; /* can relocate its simple result */
 		}
 	}
@@ -523,20 +518,20 @@ public class FuncState extends LuaC
 			}
 			case LexState.VUPVAL:
 			{
-				e.u.s.info = this.codeABC(OP_GETUPVAL, 0, e.u.s.info, 0);
+				e.u.s.info = codeABC(OP_GETUPVAL, 0, e.u.s.info, 0);
 				e._k = LexState.VRELOCABLE;
 				break;
 			}
 			case LexState.VGLOBAL:
 			{
-				e.u.s.info = this.codeABx(OP_GETGLOBAL, 0, e.u.s.info);
+				e.u.s.info = codeABx(OP_GETGLOBAL, 0, e.u.s.info);
 				e._k = LexState.VRELOCABLE;
 				break;
 			}
 			case LexState.VINDEXED:
 			{
-				this.freereg(e.u.s.aux);
-				this.freereg(e.u.s.info);
+				freereg(e.u.s.aux);
+				freereg(e.u.s.info);
 				e.u.s.info = this
 				        .codeABC(OP_GETTABLE, 0, e.u.s.info, e.u.s.aux);
 				e._k = LexState.VRELOCABLE;
@@ -545,7 +540,7 @@ public class FuncState extends LuaC
 			case LexState.VVARARG:
 			case LexState.VCALL:
 			{
-				this.setoneret(e);
+				setoneret(e);
 				break;
 			}
 			default:
@@ -555,40 +550,40 @@ public class FuncState extends LuaC
 
 	int code_label(int A, int b, int jump)
 	{
-		this.getlabel(); /* those instructions may be jump targets */
-		return this.codeABC(OP_LOADBOOL, A, b, jump);
+		getlabel(); /* those instructions may be jump targets */
+		return codeABC(OP_LOADBOOL, A, b, jump);
 	}
 
 	void discharge2reg(expdesc e, int reg)
 	{
-		this.dischargevars(e);
+		dischargevars(e);
 		switch(e._k)
 		{
 			case LexState.VNIL:
 			{
-				this.nil(reg, 1);
+				nil(reg, 1);
 				break;
 			}
 			case LexState.VFALSE:
 			case LexState.VTRUE:
 			{
-				this.codeABC(OP_LOADBOOL, reg, (e._k == LexState.VTRUE ? 1 : 0),
+				codeABC(OP_LOADBOOL, reg, (e._k == LexState.VTRUE ? 1 : 0),
 				        0);
 				break;
 			}
 			case LexState.VK:
 			{
-				this.codeABx(OP_LOADK, reg, e.u.s.info);
+				codeABx(OP_LOADK, reg, e.u.s.info);
 				break;
 			}
 			case LexState.VKNUM:
 			{
-				this.codeABx(OP_LOADK, reg, this.numberK(e.u.nval()));
+				codeABx(OP_LOADK, reg, numberK(e.u.nval()));
 				break;
 			}
 			case LexState.VRELOCABLE:
 			{
-				InstructionPtr pc = this.getcodePtr(e);
+				InstructionPtr pc = getcodePtr(e);
 				SETARG_A(pc, reg);
 				break;
 			}
@@ -613,13 +608,13 @@ public class FuncState extends LuaC
 		if(e._k != LexState.VNONRELOC)
 		{
 			reserveregs(1);
-			discharge2reg(e, this.freereg - 1);
+			discharge2reg(e, freereg - 1);
 		}
 	}
 
 	void exp2reg(expdesc e, int reg)
 	{
-		this.discharge2reg(e, reg);
+		discharge2reg(e, reg);
 		if(e._k == LexState.VJMP)
 		    e.t = concat(e.t, e.u.s.info); /* put this jump in `t' list */
 		if(e.hasjumps())
@@ -627,17 +622,17 @@ public class FuncState extends LuaC
 			int _final; /* position after whole expression */
 			int p_f = LexState.NO_JUMP; /* position of an eventual LOAD false */
 			int p_t = LexState.NO_JUMP; /* position of an eventual LOAD true */
-			if(this.need_value(e.t) || this.need_value(e.f))
+			if(need_value(e.t) || need_value(e.f))
 			{
 				int fj = (e._k == LexState.VJMP) ? LexState.NO_JUMP : this
 				        .jump();
-				p_f = this.code_label(reg, 0, 1);
-				p_t = this.code_label(reg, 1, 0);
-				this.patchtohere(fj);
+				p_f = code_label(reg, 0, 1);
+				p_t = code_label(reg, 1, 0);
+				patchtohere(fj);
 			}
-			_final = this.getlabel();
-			this.patchlistaux(e.f, _final, reg, p_f);
-			this.patchlistaux(e.t, _final, reg, p_t);
+			_final = getlabel();
+			patchlistaux(e.f, _final, reg, p_f);
+			patchlistaux(e.t, _final, reg, p_t);
 		}
 		e.f = e.t = LexState.NO_JUMP;
 		e.u.s.info = reg;
@@ -646,40 +641,40 @@ public class FuncState extends LuaC
 
 	void exp2nextreg(expdesc e)
 	{
-		this.dischargevars(e);
-		this.freeexp(e);
-		this.reserveregs(1);
-		this.exp2reg(e, this.freereg - 1);
+		dischargevars(e);
+		freeexp(e);
+		reserveregs(1);
+		exp2reg(e, freereg - 1);
 	}
 
 	int exp2anyreg(expdesc e)
 	{
-		this.dischargevars(e);
+		dischargevars(e);
 		if(e._k == LexState.VNONRELOC)
 		{
 			if(!e.hasjumps())
 			    return e.u.s.info; /* exp is already in a register */
-			if(e.u.s.info >= this.nactvar)
+			if(e.u.s.info >= nactvar)
 			{ /* reg. is not a local? */
-				this.exp2reg(e, e.u.s.info); /* put value on it */
+				exp2reg(e, e.u.s.info); /* put value on it */
 				return e.u.s.info;
 			}
 		}
-		this.exp2nextreg(e); /* default */
+		exp2nextreg(e); /* default */
 		return e.u.s.info;
 	}
 
 	void exp2val(expdesc e)
 	{
 		if(e.hasjumps())
-			this.exp2anyreg(e);
+			exp2anyreg(e);
 		else
-			this.dischargevars(e);
+			dischargevars(e);
 	}
 
 	int exp2RK(expdesc e)
 	{
-		this.exp2val(e);
+		exp2val(e);
 		switch(e._k)
 		{
 			case LexState.VKNUM:
@@ -687,11 +682,11 @@ public class FuncState extends LuaC
 			case LexState.VFALSE:
 			case LexState.VNIL:
 			{
-				if(this.nk <= MAXINDEXRK)
+				if(nk <= MAXINDEXRK)
 				{ /* constant fit in RK operand? */
-					e.u.s.info = (e._k == LexState.VNIL) ? this.nilK()
-					        : (e._k == LexState.VKNUM) ? this.numberK(e.u.nval())
-					                : this.boolK((e._k == LexState.VTRUE));
+					e.u.s.info = (e._k == LexState.VNIL) ? nilK()
+					        : (e._k == LexState.VKNUM) ? numberK(e.u.nval())
+					                : boolK((e._k == LexState.VTRUE));
 					e._k = LexState.VK;
 					return RKASK(e.u.s.info);
 				}
@@ -705,7 +700,7 @@ public class FuncState extends LuaC
 			}
 		}
 		/* not a constant in the right range: put it in a register */
-		return this.exp2anyreg(e);
+		return exp2anyreg(e);
 	}
 
 	void storevar(expdesc var, expdesc ex)
@@ -714,26 +709,26 @@ public class FuncState extends LuaC
 		{
 			case LexState.VLOCAL:
 			{
-				this.freeexp(ex);
-				this.exp2reg(ex, var.u.s.info);
+				freeexp(ex);
+				exp2reg(ex, var.u.s.info);
 				return;
 			}
 			case LexState.VUPVAL:
 			{
-				int e = this.exp2anyreg(ex);
-				this.codeABC(OP_SETUPVAL, e, var.u.s.info, 0);
+				int e = exp2anyreg(ex);
+				codeABC(OP_SETUPVAL, e, var.u.s.info, 0);
 				break;
 			}
 			case LexState.VGLOBAL:
 			{
-				int e = this.exp2anyreg(ex);
-				this.codeABx(OP_SETGLOBAL, e, var.u.s.info);
+				int e = exp2anyreg(ex);
+				codeABx(OP_SETGLOBAL, e, var.u.s.info);
 				break;
 			}
 			case LexState.VINDEXED:
 			{
-				int e = this.exp2RK(ex);
-				this.codeABC(OP_SETTABLE, var.u.s.info, var.u.s.aux, e);
+				int e = exp2RK(ex);
+				codeABC(OP_SETTABLE, var.u.s.info, var.u.s.aux, e);
 				break;
 			}
 			default:
@@ -742,25 +737,25 @@ public class FuncState extends LuaC
 				break;
 			}
 		}
-		this.freeexp(ex);
+		freeexp(ex);
 	}
 
 	void self(expdesc e, expdesc key)
 	{
 		int func;
-		this.exp2anyreg(e);
-		this.freeexp(e);
-		func = this.freereg;
-		this.reserveregs(2);
-		this.codeABC(OP_SELF, func, e.u.s.info, this.exp2RK(key));
-		this.freeexp(key);
+		exp2anyreg(e);
+		freeexp(e);
+		func = freereg;
+		reserveregs(2);
+		codeABC(OP_SELF, func, e.u.s.info, exp2RK(key));
+		freeexp(key);
 		e.u.s.info = func;
 		e._k = LexState.VNONRELOC;
 	}
 
 	void invertjump(expdesc e)
 	{
-		InstructionPtr pc = this.getjumpcontrol(e.u.s.info);
+		InstructionPtr pc = getjumpcontrol(e.u.s.info);
 		_assert(testTMode(GET_OPCODE(pc.get())) && GET_OPCODE(pc.get()) != OP_TESTSET && Lua.GET_OPCODE(pc.get()) != OP_TEST);
 		// SETARG_A(pc, !(GETARG_A(pc.get())));
 		int a = GETARG_A(pc.get());
@@ -772,23 +767,23 @@ public class FuncState extends LuaC
 	{
 		if(e._k == LexState.VRELOCABLE)
 		{
-			int ie = this.getcode(e);
+			int ie = getcode(e);
 			if(GET_OPCODE(ie) == OP_NOT)
 			{
-				this._pc--; /* remove previous OP_NOT */
-				return this.condjump(OP_TEST, GETARG_B(ie), 0, (cond != 0 ? 0 : 1));
+				_pc--; /* remove previous OP_NOT */
+				return condjump(OP_TEST, GETARG_B(ie), 0, (cond != 0 ? 0 : 1));
 			}
 			/* else go through */
 		}
-		this.discharge2anyreg(e);
-		this.freeexp(e);
-		return this.condjump(OP_TESTSET, NO_REG, e.u.s.info, cond);
+		discharge2anyreg(e);
+		freeexp(e);
+		return condjump(OP_TESTSET, NO_REG, e.u.s.info, cond);
 	}
 
 	void goiftrue(expdesc e)
 	{
 		int pc1; /* pc of last jump */
-		this.dischargevars(e);
+		dischargevars(e);
 		switch(e._k)
 		{
 			case LexState.VK:
@@ -800,18 +795,18 @@ public class FuncState extends LuaC
 			}
 			case LexState.VFALSE:
 			{
-				pc1 = this.jump(); /* always jump */
+				pc1 = jump(); /* always jump */
 				break;
 			}
 			case LexState.VJMP:
 			{
-				this.invertjump(e);
+				invertjump(e);
 				pc1 = e.u.s.info;
 				break;
 			}
 			default:
 			{
-				pc1 = this.jumponcond(e, 0);
+				pc1 = jumponcond(e, 0);
 				break;
 			}
 		}
@@ -823,7 +818,7 @@ public class FuncState extends LuaC
 	void goiffalse(expdesc e)
 	{
 		int pc1; /* pc of last jump */
-		this.dischargevars(e);
+		dischargevars(e);
 		switch(e._k)
 		{
 			case LexState.VNIL:
@@ -834,7 +829,7 @@ public class FuncState extends LuaC
 			}
 			case LexState.VTRUE:
 			{
-				pc1 = this.jump(); /* always jump */
+				pc1 = jump(); /* always jump */
 				break;
 			}
 			case LexState.VJMP:
@@ -844,7 +839,7 @@ public class FuncState extends LuaC
 			}
 			default:
 			{
-				pc1 = this.jumponcond(e, 1);
+				pc1 = jumponcond(e, 1);
 				break;
 			}
 		}
@@ -855,7 +850,7 @@ public class FuncState extends LuaC
 
 	void codenot(expdesc e)
 	{
-		this.dischargevars(e);
+		dischargevars(e);
 		switch(e._k)
 		{
 			case LexState.VNIL:
@@ -873,15 +868,15 @@ public class FuncState extends LuaC
 			}
 			case LexState.VJMP:
 			{
-				this.invertjump(e);
+				invertjump(e);
 				break;
 			}
 			case LexState.VRELOCABLE:
 			case LexState.VNONRELOC:
 			{
-				this.discharge2anyreg(e);
-				this.freeexp(e);
-				e.u.s.info = this.codeABC(OP_NOT, 0, e.u.s.info, 0);
+				discharge2anyreg(e);
+				freeexp(e);
+				e.u.s.info = codeABC(OP_NOT, 0, e.u.s.info, 0);
 				e._k = LexState.VRELOCABLE;
 				break;
 			}
@@ -897,13 +892,13 @@ public class FuncState extends LuaC
 			e.f = e.t;
 			e.t = temp;
 		}
-		this.removevalues(e.f);
-		this.removevalues(e.t);
+		removevalues(e.f);
+		removevalues(e.t);
 	}
 
 	void indexed(expdesc t, expdesc k)
 	{
-		t.u.s.aux = this.exp2RK(k);
+		t.u.s.aux = exp2RK(k);
 		t._k = LexState.VINDEXED;
 	}
 
@@ -957,28 +952,28 @@ public class FuncState extends LuaC
 	{
 		if(constfolding(op, e1, e2))
 		    return;
-		int o2 = (op != OP_UNM && op != OP_LEN) ? this.exp2RK(e2) : 0;
-		int o1 = this.exp2RK(e1);
+		int o2 = (op != OP_UNM && op != OP_LEN) ? exp2RK(e2) : 0;
+		int o1 = exp2RK(e1);
 		if(o1 > o2)
 		{
-			this.freeexp(e1);
-			this.freeexp(e2);
+			freeexp(e1);
+			freeexp(e2);
 		}
 		else
 		{
-			this.freeexp(e2);
-			this.freeexp(e1);
+			freeexp(e2);
+			freeexp(e1);
 		}
-		e1.u.s.info = this.codeABC(op, 0, o1, o2);
+		e1.u.s.info = codeABC(op, 0, o1, o2);
 		e1._k = LexState.VRELOCABLE;
 	}
 
 	void codecomp(int /* OpCode */op, int cond, expdesc e1, expdesc e2)
 	{
-		int o1 = this.exp2RK(e1);
-		int o2 = this.exp2RK(e2);
-		this.freeexp(e2);
-		this.freeexp(e1);
+		int o1 = exp2RK(e1);
+		int o2 = exp2RK(e2);
+		freeexp(e2);
+		freeexp(e1);
 		if(cond == 0 && op != OP_EQ)
 		{
 			int temp; /* exchange args to replace by `<' or `<=' */
@@ -987,7 +982,7 @@ public class FuncState extends LuaC
 			o2 = temp; /* o1 <==> o2 */
 			cond = 1;
 		}
-		e1.u.s.info = this.condjump(op, cond, o1, o2);
+		e1.u.s.info = condjump(op, cond, o1, o2);
 		e1._k = LexState.VJMP;
 	}
 
@@ -1000,17 +995,17 @@ public class FuncState extends LuaC
 			case LexState.OPR_MINUS:
 			{
 				if(e._k == LexState.VK)
-				    this.exp2anyreg(e); /* cannot operate on non-numeric constants */
-				this.codearith(OP_UNM, e, e2);
+				    exp2anyreg(e); /* cannot operate on non-numeric constants */
+				codearith(OP_UNM, e, e2);
 				break;
 			}
 			case LexState.OPR_NOT:
-				this.codenot(e);
+				codenot(e);
 				break;
 			case LexState.OPR_LEN:
 			{
-				this.exp2anyreg(e); /* cannot operate on constants */
-				this.codearith(OP_LEN, e, e2);
+				exp2anyreg(e); /* cannot operate on constants */
+				codearith(OP_LEN, e, e2);
 				break;
 			}
 			default:
@@ -1024,17 +1019,17 @@ public class FuncState extends LuaC
 		{
 			case LexState.OPR_AND:
 			{
-				this.goiftrue(v);
+				goiftrue(v);
 				break;
 			}
 			case LexState.OPR_OR:
 			{
-				this.goiffalse(v);
+				goiffalse(v);
 				break;
 			}
 			case LexState.OPR_CONCAT:
 			{
-				this.exp2nextreg(v); /* operand must be on the `stack' */
+				exp2nextreg(v); /* operand must be on the `stack' */
 				break;
 			}
 			case LexState.OPR_ADD:
@@ -1045,12 +1040,12 @@ public class FuncState extends LuaC
 			case LexState.OPR_POW:
 			{
 				if(!v.isnumeral())
-				    this.exp2RK(v);
+				    exp2RK(v);
 				break;
 			}
 			default:
 			{
-				this.exp2RK(v);
+				exp2RK(v);
 				break;
 			}
 		}
@@ -1080,58 +1075,58 @@ public class FuncState extends LuaC
 			}
 			case LexState.OPR_CONCAT:
 			{
-				this.exp2val(e2);
+				exp2val(e2);
 				if(e2._k == LexState.VRELOCABLE
-				        && GET_OPCODE(this.getcode(e2)) == OP_CONCAT)
+				        && GET_OPCODE(getcode(e2)) == OP_CONCAT)
 				{
-					_assert(e1.u.s.info == GETARG_B(this.getcode(e2)) - 1);
-					this.freeexp(e1);
-					SETARG_B(this.getcodePtr(e2), e1.u.s.info);
+					_assert(e1.u.s.info == GETARG_B(getcode(e2)) - 1);
+					freeexp(e1);
+					SETARG_B(getcodePtr(e2), e1.u.s.info);
 					e1._k = LexState.VRELOCABLE;
 					e1.u.s.info = e2.u.s.info;
 				}
 				else
 				{
-					this.exp2nextreg(e2); /* operand must be on the 'stack' */
-					this.codearith(OP_CONCAT, e1, e2);
+					exp2nextreg(e2); /* operand must be on the 'stack' */
+					codearith(OP_CONCAT, e1, e2);
 				}
 				break;
 			}
 			case LexState.OPR_ADD:
-				this.codearith(OP_ADD, e1, e2);
+				codearith(OP_ADD, e1, e2);
 				break;
 			case LexState.OPR_SUB:
-				this.codearith(OP_SUB, e1, e2);
+				codearith(OP_SUB, e1, e2);
 				break;
 			case LexState.OPR_MUL:
-				this.codearith(OP_MUL, e1, e2);
+				codearith(OP_MUL, e1, e2);
 				break;
 			case LexState.OPR_DIV:
-				this.codearith(OP_DIV, e1, e2);
+				codearith(OP_DIV, e1, e2);
 				break;
 			case LexState.OPR_MOD:
-				this.codearith(OP_MOD, e1, e2);
+				codearith(OP_MOD, e1, e2);
 				break;
 			case LexState.OPR_POW:
-				this.codearith(OP_POW, e1, e2);
+				codearith(OP_POW, e1, e2);
 				break;
 			case LexState.OPR_EQ:
-				this.codecomp(OP_EQ, 1, e1, e2);
+				codecomp(OP_EQ, 1, e1, e2);
 				break;
 			case LexState.OPR_NE:
-				this.codecomp(OP_EQ, 0, e1, e2);
+				codecomp(OP_EQ, 0, e1, e2);
 				break;
 			case LexState.OPR_LT:
-				this.codecomp(OP_LT, 1, e1, e2);
+				codecomp(OP_LT, 1, e1, e2);
 				break;
 			case LexState.OPR_LE:
-				this.codecomp(OP_LE, 1, e1, e2);
+				codecomp(OP_LE, 1, e1, e2);
 				break;
 			case LexState.OPR_GT:
-				this.codecomp(OP_LT, 0, e1, e2);
+				codecomp(OP_LT, 0, e1, e2);
 				break;
 			case LexState.OPR_GE:
-				this.codecomp(OP_LE, 0, e1, e2);
+				codecomp(OP_LE, 0, e1, e2);
 				break;
 			default:
 				_assert(false);
@@ -1140,22 +1135,22 @@ public class FuncState extends LuaC
 
 	void fixline(int line)
 	{
-		_f.lineinfo[this._pc - 1] = line;
+		_f.lineinfo[_pc - 1] = line;
 	}
 
 	int code(int instruction, int line)
 	{
 		dischargejpc(); /* `pc' will change */
 		/* put new instruction in code array */
-		if(_f.code == null || this._pc + 1 > _f.code.length)
-		    _f.code = LuaC.realloc(_f.code, this._pc * 2 + 1);
-		_f.code[this._pc] = instruction;
+		if(_f.code == null || _pc + 1 > _f.code.length)
+		    _f.code = LuaC.realloc(_f.code, _pc * 2 + 1);
+		_f.code[_pc] = instruction;
 		/* save corresponding line information */
-		if(_f.lineinfo == null || this._pc + 1 > _f.lineinfo.length)
+		if(_f.lineinfo == null || _pc + 1 > _f.lineinfo.length)
 		    _f.lineinfo = LuaC.realloc(_f.lineinfo,
-		            this._pc * 2 + 1);
-		_f.lineinfo[this._pc] = line;
-		return this._pc++;
+		            _pc * 2 + 1);
+		_f.lineinfo[_pc] = line;
+		return _pc++;
 	}
 
 	int codeABC(int o, int a, int b, int c)
@@ -1163,14 +1158,14 @@ public class FuncState extends LuaC
 		_assert(getOpMode(o) == iABC);
 		_assert(getBMode(o) != OpArgN || b == 0);
 		_assert(getCMode(o) != OpArgN || c == 0);
-		return code(CREATE_ABC(o, a, b, c), this.ls.lastline);
+		return code(CREATE_ABC(o, a, b, c), ls._lastline);
 	}
 
 	int codeABx(int o, int a, int bc)
 	{
 		_assert(getOpMode(o) == iABx || getOpMode(o) == iAsBx);
 		_assert(getCMode(o) == OpArgN);
-		return code(CREATE_ABx(o, a, bc), this.ls.lastline);
+		return code(CREATE_ABx(o, a, bc), ls._lastline);
 	}
 
 	void setlist(int base, int nelems, int tostore)
@@ -1183,7 +1178,7 @@ public class FuncState extends LuaC
 		else
 		{
 			codeABC(OP_SETLIST, base, b, 0);
-			code(c, this.ls.lastline);
+			code(c, ls._lastline);
 		}
 		freereg = base + 1; /* free registers with list values */
 	}

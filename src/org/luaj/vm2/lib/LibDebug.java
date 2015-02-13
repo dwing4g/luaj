@@ -42,7 +42,7 @@ import org.luaj.vm2.Varargs;
  * @see LibFunction
  * @see <a href="http://www.lua.org/manual/5.1/manual.html#5.9">http://www.lua.org/manual/5.1/manual.html#5.9</a>
  */
-public class LibDebug extends LibFunctionV
+public final class LibDebug extends LibFunctionV
 {
 	public static final boolean    CALLS           = (System.getProperty("CALLS") != null);
 	public static final boolean    TRACE           = (System.getProperty("TRACE") != null);
@@ -113,10 +113,6 @@ public class LibDebug extends LibFunctionV
 	private static final LuaString CURRENTLINE     = valueOf("currentline");
 	private static final LuaString ACTIVELINES     = valueOf("activelines");
 
-	public LibDebug()
-	{
-	}
-
 	private LuaTable init()
 	{
 		DEBUG_ENABLED = true;
@@ -177,15 +173,15 @@ public class LibDebug extends LibFunctionV
 	//
 	static class DebugInfo
 	{
-		LuaValue   func;
-		LuaClosure closure;
-		LuaValue[] stack;
-		Varargs    varargs, _extras;
+		LuaValue   _func;
+		LuaClosure _closure;
+		LuaValue[] _stack;
+		Varargs    _varargs, _extras;
 		int        _pc, _top;
 
 		private DebugInfo()
 		{
-			func = NIL;
+			_func = NIL;
 		}
 
 		private DebugInfo(LuaValue func)
@@ -196,50 +192,50 @@ public class LibDebug extends LibFunctionV
 
 		void setargs(Varargs varargs, LuaValue[] stack)
 		{
-			this.varargs = varargs;
-			this.stack = stack;
+			_varargs = varargs;
+			_stack = stack;
 		}
 
 		void setfunction(LuaValue func)
 		{
-			this.func = func;
-			this.closure = (func instanceof LuaClosure ? (LuaClosure)func : null);
+			_func = func;
+			_closure = (func instanceof LuaClosure ? (LuaClosure)func : null);
 		}
 
 		void clear()
 		{
-			func = NIL;
-			closure = null;
-			stack = null;
-			varargs = _extras = null;
+			_func = NIL;
+			_closure = null;
+			_stack = null;
+			_varargs = _extras = null;
 			_pc = _top = 0;
 		}
 
 		public void bytecode(int pc, Varargs extras, int top)
 		{
-			this._pc = pc;
-			this._top = top;
-			this._extras = extras;
+			_pc = pc;
+			_top = top;
+			_extras = extras;
 		}
 
 		public int currentline()
 		{
-			if(closure == null) return -1;
-			int[] li = closure._p.lineinfo;
+			if(_closure == null) return -1;
+			int[] li = _closure._p.lineinfo;
 			return li == null || _pc < 0 || _pc >= li.length ? -1 : li[_pc];
 		}
 
 		public LuaString[] getfunckind()
 		{
-			if(closure == null || _pc < 0) return null;
-			int stackpos = (closure._p.code[_pc] >> 6) & 0xff;
+			if(_closure == null || _pc < 0) return null;
+			int stackpos = (_closure._p.code[_pc] >> 6) & 0xff;
 			return getobjname(this, stackpos);
 		}
 
 		public String sourceline()
 		{
-			if(closure == null) return func.tojstring();
-			String s = closure._p.source.tojstring();
+			if(_closure == null) return _func.tojstring();
+			String s = _closure._p.source.tojstring();
 			int line = currentline();
 			return (s.startsWith("@") || s.startsWith("=") ? s.substring(1) : s) + ":" + line;
 		}
@@ -256,8 +252,8 @@ public class LibDebug extends LibFunctionV
 
 		public LuaString getlocalname(int index)
 		{
-			if(closure == null) return null;
-			return closure._p.getlocalname(index, _pc);
+			if(_closure == null) return null;
+			return _closure._p.getlocalname(index, _pc);
 		}
 
 		public String tojstring()
@@ -270,8 +266,8 @@ public class LibDebug extends LibFunctionV
 	static class DebugState
 	{
 		private final WeakReference<LuaThread> thread_ref;
-		private int                            debugCalls = 0;
-		private DebugInfo[]                    debugInfo  = new DebugInfo[LuaThread.MAX_CALLSTACK + 1];
+		private int                            debugCalls;
+		private DebugInfo[]                    debugInfo = new DebugInfo[LuaThread.MAX_CALLSTACK + 1];
 		private LuaValue                       hookfunc;
 		private boolean                        hookcall, hookline, hookrtrn, inhook;
 		private int                            hookcount, hookcodes;
@@ -337,11 +333,11 @@ public class LibDebug extends LibFunctionV
 
 		public void sethook(LuaValue func, boolean call, boolean line, boolean rtrn, int count)
 		{
-			this.hookcount = count;
-			this.hookcall = call;
-			this.hookline = line;
-			this.hookrtrn = rtrn;
-			this.hookfunc = func;
+			hookcount = count;
+			hookcall = call;
+			hookline = line;
+			hookrtrn = rtrn;
+			hookfunc = func;
 		}
 
 		DebugInfo getDebugInfo()
@@ -367,7 +363,7 @@ public class LibDebug extends LibFunctionV
 		{
 			for(int i = debugCalls; --i >= 0;)
 			{
-				if(debugInfo[i].func == func)
+				if(debugInfo[i]._func == func)
 				{
 					return debugInfo[i];
 				}
@@ -384,9 +380,9 @@ public class LibDebug extends LibFunctionV
 
 	static DebugState getDebugState(LuaThread thread)
 	{
-		if(thread.debugState == null)
-		    thread.debugState = new DebugState(thread);
-		return (DebugState)thread.debugState;
+		if(thread._debugState == null)
+		    thread._debugState = new DebugState(thread);
+		return (DebugState)thread._debugState;
 	}
 
 	static DebugState getDebugState()
@@ -448,7 +444,7 @@ public class LibDebug extends LibFunctionV
 		if(ds.inhook)
 		    return;
 		DebugInfo di = ds.getDebugInfo();
-		if(TRACE) Print.printState(di.closure, pc, di.stack, top, di.varargs);
+		if(TRACE) Print.printState(di._closure, pc, di._stack, top, di._varargs);
 		di.bytecode(pc, extras, top);
 		if(ds.hookcount > 0)
 		{
@@ -463,7 +459,7 @@ public class LibDebug extends LibFunctionV
 			int newline = di.currentline();
 			if(newline != ds.line)
 			{
-				int c = di.closure._p.code[pc];
+				int c = di._closure._p.code[pc];
 				if((c & 0x3f) != Lua.OP_JMP || ((c >>> 14) - 0x1ffff) >= 0)
 				{
 					ds.line = newline;
@@ -485,7 +481,7 @@ public class LibDebug extends LibFunctionV
 	static Varargs _gethook(Varargs args)
 	{
 		int a = 1;
-		LuaThread thread = args.isthread(a) ? args.checkthread(a++) : LuaThread.getRunning();
+		LuaThread thread = args.arg(a).isthread() ? args.arg(a++).checkthread() : LuaThread.getRunning();
 		DebugState ds = getDebugState(thread);
 		return varargsOf(
 		        ds.hookfunc,
@@ -496,7 +492,7 @@ public class LibDebug extends LibFunctionV
 	static Varargs _sethook(Varargs args)
 	{
 		int a = 1;
-		LuaThread thread = args.isthread(a) ? args.checkthread(a++) : LuaThread.getRunning();
+		LuaThread thread = args.arg(a).isthread() ? args.arg(a++).checkthread() : LuaThread.getRunning();
 		LuaValue func = args.arg(a++).optfunction(null);
 		String str = args.optjstring(a++, "");
 		int count = args.optint(a++, 0);
@@ -536,7 +532,7 @@ public class LibDebug extends LibFunctionV
 	protected static Varargs _getinfo(Varargs args, LuaValue level0func)
 	{
 		int a = 1;
-		LuaThread thread = args.isthread(a) ? args.checkthread(a++) : LuaThread.getRunning();
+		LuaThread thread = args.arg(a).isthread() ? args.arg(a++).checkthread() : LuaThread.getRunning();
 		LuaValue func = args.arg(a++);
 		String what = args.optjstring(a++, "nSluf");
 
@@ -559,7 +555,7 @@ public class LibDebug extends LibFunctionV
 
 		// start a table
 		LuaTable info = new LuaTable();
-		LuaClosure c = di.closure;
+		LuaClosure c = di._closure;
 		for(int i = 0, j = what.length(); i < j; i++)
 		{
 			switch(what.charAt(i))
@@ -577,7 +573,7 @@ public class LibDebug extends LibFunctionV
 					}
 					else
 					{
-						String shortName = di.func.tojstring();
+						String shortName = di._func.tojstring();
 						LuaString name = LuaString.valueOf("[Java] " + shortName);
 						info.set(WHAT, JAVA);
 						info.set(SOURCE, name);
@@ -607,7 +603,7 @@ public class LibDebug extends LibFunctionV
 				}
 				case 'f':
 				{
-					info.set(FUNC, di.func);
+					info.set(FUNC, di._func);
 					break;
 				}
 				case 'L':
@@ -639,7 +635,7 @@ public class LibDebug extends LibFunctionV
 	static Varargs _getlocal(Varargs args)
 	{
 		int a = 1;
-		LuaThread thread = args.isthread(a) ? args.checkthread(a++) : LuaThread.getRunning();
+		LuaThread thread = args.arg(a).isthread() ? args.arg(a++).checkthread() : LuaThread.getRunning();
 		int level = args.checkint(a++);
 		int local = args.checkint(a++);
 
@@ -649,7 +645,7 @@ public class LibDebug extends LibFunctionV
 		if(name != null)
 		{
 			@SuppressWarnings("null")
-			LuaValue value = di.stack[local - 1];
+			LuaValue value = di._stack[local - 1];
 			return varargsOf(name, value);
 		}
 		return NIL;
@@ -659,7 +655,7 @@ public class LibDebug extends LibFunctionV
 	static Varargs _setlocal(Varargs args)
 	{
 		int a = 1;
-		LuaThread thread = args.isthread(a) ? args.checkthread(a++) : LuaThread.getRunning();
+		LuaThread thread = args.arg(a).isthread() ? args.arg(a++).checkthread() : LuaThread.getRunning();
 		int level = args.checkint(a++);
 		int local = args.checkint(a++);
 		LuaValue value = args.arg(a++);
@@ -669,7 +665,7 @@ public class LibDebug extends LibFunctionV
 		LuaString name = (di != null ? di.getlocalname(local) : null);
 		if(name != null)
 		{
-			di.stack[local - 1] = value;
+			di._stack[local - 1] = value;
 			return name;
 		}
 		return NIL;
@@ -772,7 +768,7 @@ public class LibDebug extends LibFunctionV
 	static LuaValue _traceback(Varargs args)
 	{
 		int a = 1;
-		LuaThread thread = args.isthread(a) ? args.checkthread(a++) : LuaThread.getRunning();
+		LuaThread thread = args.arg(a).isthread() ? args.arg(a++).checkthread() : LuaThread.getRunning();
 		String message = args.optjstring(a++, null);
 		int level = args.optint(a++, 1);
 		String tb = LibDebug.traceback(thread, level - 1);
@@ -830,7 +826,7 @@ public class LibDebug extends LibFunctionV
 		for(int i = 0, n = ds.debugCalls; i < n; i++)
 		{
 			di = ds.getDebugInfo(i);
-			if(di != null && di.func.isclosure())
+			if(di != null && di._func.isclosure())
 			    return di.sourceline();
 		}
 		return fileline(0);
@@ -860,9 +856,9 @@ public class LibDebug extends LibFunctionV
 	static LuaString[] getobjname(DebugInfo di, int stackpos)
 	{
 		LuaString name;
-		if(di.closure != null)
+		if(di._closure != null)
 		{ /* a Lua function? */
-			Prototype p = di.closure._p;
+			Prototype p = di._closure._p;
 			int pc = di._pc; // currentpc(L, ci);
 			int i;// Instruction i;
 			name = p.getlocalname(stackpos + 1, pc);

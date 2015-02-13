@@ -72,6 +72,6 @@ public abstract class LuaFunction extends LuaValue
 	@Override
 	public void setfenv(LuaValue env)
 	{
-		this._env = env != null ? env : NIL;
+		_env = env != null ? env : NIL;
 	}
 }

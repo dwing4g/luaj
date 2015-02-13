@@ -36,7 +36,7 @@ import org.luaj.vm2.Varargs;
  * @see LibFunction
  * @see <a href="http://www.lua.org/manual/5.1/manual.html#5.1">http://www.lua.org/manual/5.1/manual.html#5.1</a>
  */
-public class LibBase extends LibFunction1
+public final class LibBase extends LibFunction1
 {
 	private LuaValue              next;
 	private LuaValue              inext;
@@ -71,13 +71,6 @@ public class LibBase extends LibFunction1
 	        "next", // "next"  ( table, [index] ) -> next-index, next-value
 	        "__inext", // "inext" ( table, [int-index] ) -> next-index, next-value
 	                                        };
-
-	/**
-	 * Construct a base libarary instance.
-	 */
-	public LibBase()
-	{
-	}
 
 	@Override
 	public LuaValue call(LuaValue arg)
@@ -146,11 +139,13 @@ public class LibBase extends LibFunction1
 		if(arg.isfunction())
 		    return arg;
 		int level = arg.optint(1);
-		Varargs.argcheck(level >= 0, 1, "level must be non-negative");
+		if(level < 0)
+		    LuaValue.argerror(1, "level must be non-negative");
 		if(level == 0)
 		    return LuaThread.getRunning();
 		LuaValue f = LuaThread.getCallstackFunction(level);
-		Varargs.argcheck(f != null, 1, "invalid level");
+		if(f == null)
+		    LuaValue.argerror(1, "invalid level");
 		return f;
 	}
 
@@ -251,7 +246,7 @@ public class LibBase extends LibFunction1
 						if(i > 1) System.out.write('\t');
 						LuaString s = tostring.call(args.arg(i)).strvalue();
 						int z = s.indexOf((byte)0, 0);
-						System.out.write(s.m_bytes, s.m_offset, z >= 0 ? z : s.m_length);
+						System.out.write(s._bytes, s._offset, z >= 0 ? z : s._length);
 					}
 					System.out.println();
 					return NONE;
@@ -423,9 +418,9 @@ public class LibBase extends LibFunction1
 		byte[]         bytes;
 		int            offset, remaining = 0;
 
-		StringInputStream(LuaValue func)
+		StringInputStream(LuaValue f)
 		{
-			this.func = func;
+			func = f;
 		}
 
 		@Override
@@ -437,9 +432,9 @@ public class LibBase extends LibFunction1
 				if(s.isnil())
 				    return -1;
 				LuaString ls = s.strvalue();
-				bytes = ls.m_bytes;
-				offset = ls.m_offset;
-				remaining = ls.m_length;
+				bytes = ls._bytes;
+				offset = ls._offset;
+				remaining = ls._length;
 				if(remaining <= 0)
 				    return -1;
 			}

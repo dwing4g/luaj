@@ -57,9 +57,9 @@ public class Print extends Lua
 	static void printString(PrintStream ps, LuaString s)
 	{
 		ps.print('"');
-		for(int i = 0, n = s.m_length; i < n; i++)
+		for(int i = 0, n = s._length; i < n; i++)
 		{
-			int c = s.m_bytes[s.m_offset + i];
+			int c = s._bytes[s._offset + i];
 			if(c >= ' ' && c <= '~' && c != '\"' && c != '\\')
 				ps.print((char)c);
 			else
@@ -299,7 +299,7 @@ public class Print extends Lua
 		ps.print("locals (" + n + ") for " + id() + ":\n");
 		for(i = 0; i < n; i++)
 		{
-			ps.println("  " + i + "  " + f.locvars[i].varname + " " + (f.locvars[i].startpc + 1) + " " + (f.locvars[i].endpc + 1));
+			ps.println("  " + i + "  " + f.locvars[i]._varname + " " + (f.locvars[i]._startpc + 1) + " " + (f.locvars[i]._endpc + 1));
 		}
 	}
 

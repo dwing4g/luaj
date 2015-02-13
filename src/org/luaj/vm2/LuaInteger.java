@@ -43,9 +43,9 @@ public final class LuaInteger extends LuaNumber
 	/** The value being held by this instance. */
 	public final int v;
 
-	LuaInteger(int i)
+	private LuaInteger(int i)
 	{
-		this.v = i;
+		v = i;
 	}
 
 	@Override

@@ -18,7 +18,7 @@ import org.luaj.vm2.LuaValue;
  */
 class JavaInstance extends LuaUserdata
 {
-	JavaClass jclass;
+	JavaClass _jclass;
 
 	JavaInstance(Object instance)
 	{
@@ -28,19 +28,19 @@ class JavaInstance extends LuaUserdata
 	@Override
 	public LuaValue get(LuaValue key)
 	{
-		if(jclass == null)
-		    jclass = JavaClass.forClass(m_instance.getClass());
-		Field f = jclass.getField(key);
+		if(_jclass == null)
+		    _jclass = JavaClass.forClass(_instance.getClass());
+		Field f = _jclass.getField(key);
 		if(f != null)
 		    try
 		    {
-			    return CoerceJavaToLua.coerce(f.get(m_instance));
+			    return CoerceJavaToLua.coerce(f.get(_instance));
 		    }
 		    catch(Exception e)
 		    {
 			    throw new LuaError(e);
 		    }
-		LuaValue m = jclass.getMethod(key);
+		LuaValue m = _jclass.getMethod(key);
 		if(m != null)
 		    return m;
 		return super.get(key);
@@ -49,13 +49,13 @@ class JavaInstance extends LuaUserdata
 	@Override
 	public void set(LuaValue key, LuaValue value)
 	{
-		if(jclass == null)
-		    jclass = JavaClass.forClass(m_instance.getClass());
-		Field f = jclass.getField(key);
+		if(_jclass == null)
+		    _jclass = JavaClass.forClass(_instance.getClass());
+		Field f = _jclass.getField(key);
 		if(f != null)
 		    try
 		    {
-			    f.set(m_instance, CoerceLuaToJava.coerce(value, f.getType()));
+			    f.set(_instance, CoerceLuaToJava.coerce(value, f.getType()));
 			    return;
 		    }
 		    catch(Exception e)

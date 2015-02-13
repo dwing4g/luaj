@@ -7,8 +7,8 @@ package org.luaj.vm2;
  */
 public final class UpValue
 {
-	LuaValue[] array; // initially the stack, becomes a holder
-	int        index;
+	LuaValue[] _array; // initially the stack, becomes a holder
+	int        _index;
 
 	/**
 	 *  Create an upvalue relative to a stack
@@ -17,8 +17,8 @@ public final class UpValue
 	 */
 	public UpValue(LuaValue[] stack, int index)
 	{
-		this.array = stack;
-		this.index = index;
+		_array = stack;
+		_index = index;
 	}
 
 	/**
@@ -28,33 +28,33 @@ public final class UpValue
 	 */
 	public String tojstring()
 	{
-		return array[index].tojstring();
+		return _array[_index].tojstring();
 	}
 
 	/**
 	 * Get the value of the upvalue
 	 * @return the {@link LuaValue} for this upvalue
 	 */
-	public final LuaValue getValue()
+	public LuaValue getValue()
 	{
-		return array[index];
+		return _array[_index];
 	}
 
 	/**
 	 * Set the value of the upvalue
 	 * @param the {@link LuaValue} to set it to
 	 */
-	public final void setValue(LuaValue value)
+	public void setValue(LuaValue value)
 	{
-		array[index] = value;
+		_array[_index] = value;
 	}
 
 	/**
 	 * Close this upvalue so it is no longer on the stack
 	 */
-	public final void close()
+	public void close()
 	{
-		array = new LuaValue[] { array[index] };
-		index = 0;
+		_array = new LuaValue[] { _array[_index] };
+		_index = 0;
 	}
 }

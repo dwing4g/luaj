@@ -32,13 +32,9 @@ import org.luaj.vm2.compiler.DumpState;
  * @see LibFunction
  * @see <a href="http://www.lua.org/manual/5.1/manual.html#5.4">http://www.lua.org/manual/5.1/manual.html#5.4</a>
  */
-public class LibString extends LibFunction1
+public final class LibString extends LibFunction1
 {
 	public static LuaTable instance;
-
-	public LibString()
-	{
-	}
 
 	@Override
 	public LuaValue call(LuaValue arg)
@@ -124,7 +120,7 @@ public class LibString extends LibFunction1
 	static Varargs byte_(Varargs args)
 	{
 		LuaString s = args.checkstring(1);
-		int l = s.m_length;
+		int l = s._length;
 		int posi = posrelat(args.optint(2, 1), l);
 		int pose = posrelat(args.optint(3, posi), l);
 		int n, i;
@@ -520,7 +516,7 @@ public class LibString extends LibFunction1
 			buf.append(s);
 		}
 
-		public static final void pad(Buffer buf, char c, int n)
+		public static void pad(Buffer buf, char c, int n)
 		{
 			byte b = (byte)c;
 			while(n-- > 0)
@@ -561,29 +557,29 @@ public class LibString extends LibFunction1
 
 	static class GMatchAux extends LibFunctionV
 	{
-		private final int        srclen;
-		private final MatchState ms;
-		private int              soffset;
+		private final int        _srclen;
+		private final MatchState _ms;
+		private int              _soffset;
 
 		public GMatchAux(Varargs args, LuaString src, LuaString pat)
 		{
-			this.srclen = src.length();
-			this.ms = new MatchState(args, src, pat);
-			this.soffset = 0;
+			_srclen = src.length();
+			_ms = new MatchState(args, src, pat);
+			_soffset = 0;
 		}
 
 		@Override
 		public Varargs invoke(Varargs args)
 		{
-			for(; soffset < srclen; soffset++)
+			for(; _soffset < _srclen; _soffset++)
 			{
-				ms.reset();
-				int res = ms.match(soffset, 0);
+				_ms.reset();
+				int res = _ms.match(_soffset, 0);
 				if(res >= 0)
 				{
-					int soff = soffset;
-					soffset = res;
-					return ms.push_captures(true, soff, res);
+					int soff = _soffset;
+					_soffset = res;
+					return _ms.push_captures(true, soff, res);
 				}
 			}
 			return NIL;
@@ -899,26 +895,26 @@ public class LibString extends LibFunction1
 
 	static class MatchState
 	{
-		final LuaString s;
-		final LuaString p;
-		final Varargs   args;
-		int             level;
-		int[]           cinit;
-		int[]           clen;
+		final LuaString _s;
+		final LuaString _p;
+		final Varargs   _args;
+		int             _level;
+		int[]           _cinit;
+		int[]           _clen;
 
 		MatchState(Varargs args, LuaString s, LuaString pattern)
 		{
-			this.s = s;
-			this.p = pattern;
-			this.args = args;
-			this.level = 0;
-			this.cinit = new int[MAX_CAPTURES];
-			this.clen = new int[MAX_CAPTURES];
+			_s = s;
+			_p = pattern;
+			_args = args;
+			_level = 0;
+			_cinit = new int[MAX_CAPTURES];
+			_clen = new int[MAX_CAPTURES];
 		}
 
 		void reset()
 		{
-			level = 0;
+			_level = 0;
 		}
 
 		private void add_s(Buffer lbuf, LuaString news, int soff, int e)
@@ -941,7 +937,7 @@ public class LibString extends LibFunction1
 					}
 					else if(b == '0')
 					{
-						lbuf.append(s.substring(soff, e));
+						lbuf.append(_s.substring(soff, e));
 					}
 					else
 					{
@@ -976,7 +972,7 @@ public class LibString extends LibFunction1
 
 			if(!repl.toboolean())
 			{
-				repl = s.substring(soffset, end);
+				repl = _s.substring(soffset, end);
 			}
 			else if(!repl.isstring())
 			{
@@ -987,7 +983,7 @@ public class LibString extends LibFunction1
 
 		Varargs push_captures(boolean wholeMatch, int soff, int end)
 		{
-			int nlevels = (this.level == 0 && wholeMatch) ? 1 : this.level;
+			int nlevels = (_level == 0 && wholeMatch) ? 1 : _level;
 			switch(nlevels)
 			{
 				case 0:
@@ -1003,25 +999,25 @@ public class LibString extends LibFunction1
 
 		private LuaValue push_onecapture(int i, int soff, int end)
 		{
-			if(i >= this.level)
+			if(i >= _level)
 			{
 				if(i == 0)
-				    return s.substring(soff, end);
+				    return _s.substring(soff, end);
 				return error("invalid capture index");
 			}
-			int l = clen[i];
+			int l = _clen[i];
 			if(l == CAP_UNFINISHED)
 			    return error("unfinished capture");
 			if(l == CAP_POSITION)
-			    return valueOf(cinit[i] + 1);
-			int begin = cinit[i];
-			return s.substring(begin, begin + l);
+			    return valueOf(_cinit[i] + 1);
+			int begin = _cinit[i];
+			return _s.substring(begin, begin + l);
 		}
 
 		private int check_capture(int l)
 		{
 			l -= '1';
-			if(l < 0 || l >= level || this.clen[l] == CAP_UNFINISHED)
+			if(l < 0 || l >= _level || _clen[l] == CAP_UNFINISHED)
 			{
 				error("invalid capture index");
 			}
@@ -1030,9 +1026,9 @@ public class LibString extends LibFunction1
 
 		private int capture_to_close()
 		{
-			int lvl = this.level;
+			int lvl = _level;
 			for(lvl--; lvl >= 0; lvl--)
-				if(clen[lvl] == CAP_UNFINISHED)
+				if(_clen[lvl] == CAP_UNFINISHED)
 				    return lvl;
 			error("invalid pattern capture");
 			return 0;
@@ -1040,27 +1036,27 @@ public class LibString extends LibFunction1
 
 		int classend(int poffset)
 		{
-			switch(p.luaByte(poffset++))
+			switch(_p.luaByte(poffset++))
 			{
 				case L_ESC:
-					if(poffset == p.length())
+					if(poffset == _p.length())
 					{
 						error("malformed pattern (ends with %)");
 					}
 					return poffset + 1;
 
 				case '[':
-					if(p.luaByte(poffset) == '^') poffset++;
+					if(_p.luaByte(poffset) == '^') poffset++;
 					do
 					{
-						if(poffset == p.length())
+						if(poffset == _p.length())
 						{
 							error("malformed pattern (missing ])");
 						}
-						if(p.luaByte(poffset++) == L_ESC && poffset != p.length())
+						if(_p.luaByte(poffset++) == L_ESC && poffset != _p.length())
 						    poffset++;
 					}
-					while(p.luaByte(poffset) != ']');
+					while(_p.luaByte(poffset) != ']');
 					return poffset + 1;
 				default:
 					return poffset;
@@ -1114,42 +1110,42 @@ public class LibString extends LibFunction1
 		boolean matchbracketclass(int c, int poff, int ec)
 		{
 			boolean sig = true;
-			if(p.luaByte(poff + 1) == '^')
+			if(_p.luaByte(poff + 1) == '^')
 			{
 				sig = false;
 				poff++;
 			}
 			while(++poff < ec)
 			{
-				if(p.luaByte(poff) == L_ESC)
+				if(_p.luaByte(poff) == L_ESC)
 				{
 					poff++;
-					if(match_class(c, p.luaByte(poff)))
+					if(match_class(c, _p.luaByte(poff)))
 					    return sig;
 				}
-				else if((p.luaByte(poff + 1) == '-') && (poff + 2 < ec))
+				else if((_p.luaByte(poff + 1) == '-') && (poff + 2 < ec))
 				{
 					poff += 2;
-					if(p.luaByte(poff - 2) <= c && c <= p.luaByte(poff))
+					if(_p.luaByte(poff - 2) <= c && c <= _p.luaByte(poff))
 					    return sig;
 				}
-				else if(p.luaByte(poff) == c) return sig;
+				else if(_p.luaByte(poff) == c) return sig;
 			}
 			return !sig;
 		}
 
 		boolean singlematch(int c, int poff, int ep)
 		{
-			switch(p.luaByte(poff))
+			switch(_p.luaByte(poff))
 			{
 				case '.':
 					return true;
 				case L_ESC:
-					return match_class(c, p.luaByte(poff + 1));
+					return match_class(c, _p.luaByte(poff + 1));
 				case '[':
 					return matchbracketclass(c, poff, ep - 1);
 				default:
-					return p.luaByte(poff) == c;
+					return _p.luaByte(poff) == c;
 			}
 		}
 
@@ -1164,20 +1160,20 @@ public class LibString extends LibFunction1
 				// Check if we are at the end of the pattern -
 				// equivalent to the '\0' case in the C version, but our pattern
 				// string is not NUL-terminated.
-				if(poffset == p.length())
+				if(poffset == _p.length())
 				    return soffset;
-				switch(p.luaByte(poffset))
+				switch(_p.luaByte(poffset))
 				{
 					case '(':
-						if(++poffset < p.length() && p.luaByte(poffset) == ')')
+						if(++poffset < _p.length() && _p.luaByte(poffset) == ')')
 						    return start_capture(soffset, poffset + 1, CAP_POSITION);
 						return start_capture(soffset, poffset, CAP_UNFINISHED);
 					case ')':
 						return end_capture(soffset, poffset + 1);
 					case L_ESC:
-						if(poffset + 1 == p.length())
+						if(poffset + 1 == _p.length())
 						    error("malformed pattern (ends with '%')");
-						switch(p.luaByte(poffset + 1))
+						switch(_p.luaByte(poffset + 1))
 						{
 							case 'b':
 								soffset = matchbalance(soffset, poffset + 2);
@@ -1187,21 +1183,21 @@ public class LibString extends LibFunction1
 							case 'f':
 							{
 								poffset += 2;
-								if(p.luaByte(poffset) != '[')
+								if(_p.luaByte(poffset) != '[')
 								{
 									error("Missing [ after %f in pattern");
 								}
 								int ep = classend(poffset);
-								int previous = (soffset == 0) ? -1 : s.luaByte(soffset - 1);
+								int previous = (soffset == 0) ? -1 : _s.luaByte(soffset - 1);
 								if(matchbracketclass(previous, poffset, ep - 1) ||
-								        matchbracketclass(s.luaByte(soffset), poffset, ep - 1))
+								        matchbracketclass(_s.luaByte(soffset), poffset, ep - 1))
 								    return -1;
 								poffset = ep;
 								continue;
 							}
 							default:
 							{
-								int c = p.luaByte(poffset + 1);
+								int c = _p.luaByte(poffset + 1);
 								if(Character.isDigit((char)c))
 								{
 									soffset = match_capture(soffset, c);
@@ -1213,12 +1209,12 @@ public class LibString extends LibFunction1
 						}
 						//$FALL-THROUGH$
 					case '$':
-						if(poffset + 1 == p.length())
-						    return (soffset == s.length()) ? soffset : -1;
+						if(poffset + 1 == _p.length())
+						    return (soffset == _s.length()) ? soffset : -1;
 				}
 				int ep = classend(poffset);
-				boolean m = soffset < s.length() && singlematch(s.luaByte(soffset), poffset, ep);
-				int pc = (ep < p.length()) ? p.luaByte(ep) : '\0';
+				boolean m = soffset < _s.length() && singlematch(_s.luaByte(soffset), poffset, ep);
+				int pc = (ep < _p.length()) ? _p.luaByte(ep) : '\0';
 
 				switch(pc)
 				{
@@ -1247,8 +1243,8 @@ public class LibString extends LibFunction1
 		int max_expand(int soff, int poff, int ep)
 		{
 			int i = 0;
-			while(soff + i < s.length() &&
-			        singlematch(s.luaByte(soff + i), poff, ep))
+			while(soff + i < _s.length() &&
+			        singlematch(_s.luaByte(soff + i), poff, ep))
 				i++;
 			while(i >= 0)
 			{
@@ -1267,7 +1263,7 @@ public class LibString extends LibFunction1
 				int res = match(soff, ep + 1);
 				if(res != -1)
 					return res;
-				else if(soff < s.length() && singlematch(s.luaByte(soff), poff, ep))
+				else if(soff < _s.length() && singlematch(_s.luaByte(soff), poff, ep))
 					soff++;
 				else
 					return -1;
@@ -1277,14 +1273,14 @@ public class LibString extends LibFunction1
 		int start_capture(int soff, int poff, int what)
 		{
 			int res;
-			int lvl = this.level;
+			int lvl = _level;
 			if(lvl >= MAX_CAPTURES)
 			    error("too many captures");
-			cinit[lvl] = soff;
-			clen[lvl] = what;
-			this.level = lvl + 1;
+			_cinit[lvl] = soff;
+			_clen[lvl] = what;
+			_level = lvl + 1;
 			if((res = match(soff, poff)) == -1)
-			    this.level--;
+			    _level--;
 			return res;
 		}
 
@@ -1292,40 +1288,40 @@ public class LibString extends LibFunction1
 		{
 			int l = capture_to_close();
 			int res;
-			clen[l] = soff - cinit[l];
+			_clen[l] = soff - _cinit[l];
 			if((res = match(soff, poff)) == -1)
-			    clen[l] = CAP_UNFINISHED;
+			    _clen[l] = CAP_UNFINISHED;
 			return res;
 		}
 
 		int match_capture(int soff, int l)
 		{
 			l = check_capture(l);
-			int len = clen[l];
-			if((s.length() - soff) >= len && LuaString.equals(s, cinit[l], s, soff, len))
+			int len = _clen[l];
+			if((_s.length() - soff) >= len && LuaString.equals(_s, _cinit[l], _s, soff, len))
 			    return soff + len;
 			return -1;
 		}
 
 		int matchbalance(int soff, int poff)
 		{
-			final int plen = p.length();
+			final int plen = _p.length();
 			if(poff == plen || poff + 1 == plen)
 			{
 				error("unbalanced pattern");
 			}
-			if(s.luaByte(soff) != p.luaByte(poff))
+			if(_s.luaByte(soff) != _p.luaByte(poff))
 			    return -1;
-			int b = p.luaByte(poff);
-			int e = p.luaByte(poff + 1);
+			int b = _p.luaByte(poff);
+			int e = _p.luaByte(poff + 1);
 			int cont = 1;
-			while(++soff < s.length())
+			while(++soff < _s.length())
 			{
-				if(s.luaByte(soff) == e)
+				if(_s.luaByte(soff) == e)
 				{
 					if(--cont == 0) return soff + 1;
 				}
-				else if(s.luaByte(soff) == b) cont++;
+				else if(_s.luaByte(soff) == b) cont++;
 			}
 			return -1;
 		}

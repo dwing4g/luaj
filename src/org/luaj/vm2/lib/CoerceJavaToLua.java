@@ -6,6 +6,7 @@ import org.luaj.vm2.LuaInteger;
 import org.luaj.vm2.LuaString;
 import org.luaj.vm2.LuaUserdata;
 import org.luaj.vm2.LuaValue;
+import org.luaj.vm2.Varargs;
 
 /**
  * Helper class to coerce values from Java to lua within the luajava library.
@@ -38,14 +39,14 @@ import org.luaj.vm2.LuaValue;
  * @see CoerceJavaToLua#coerce(Object)
  * @see LibLuajava
  */
-public class CoerceJavaToLua
+public final class CoerceJavaToLua
 {
 	static interface Coercion
 	{
 		public LuaValue coerce(Object javaValue);
 	}
 
-	static final HashMap<Class<?>, Coercion> COERCIONS = new HashMap<Class<?>, Coercion>();
+	private static final HashMap<Class<?>, Coercion> COERCIONS        = new HashMap<Class<?>, Coercion>();
 
 	static
 	{
@@ -104,6 +105,25 @@ public class CoerceJavaToLua
 		COERCIONS.put(String.class, stringCoercion);
 	}
 
+	private static final Coercion                    instanceCoercion = new Coercion()
+	                                                                  {
+		                                                                  @Override
+		                                                                  public LuaValue coerce(Object javaValue)
+		                                                                  {
+			                                                                  return new JavaInstance(javaValue);
+		                                                                  }
+	                                                                  };
+
+	// should be userdata?
+	private static final Coercion                    arrayCoercion    = new Coercion()
+	                                                                  {
+		                                                                  @Override
+		                                                                  public LuaValue coerce(Object javaValue)
+		                                                                  {
+			                                                                  return new JavaArray(javaValue);
+		                                                                  }
+	                                                                  };
+
 	/**
 	 * Coerse a Java object to a corresponding lua value.
 	 * <p>
@@ -135,23 +155,4 @@ public class CoerceJavaToLua
 		}
 		return c.coerce(o);
 	}
-
-	static final Coercion instanceCoercion = new Coercion()
-	                                       {
-		                                       @Override
-		                                       public LuaValue coerce(Object javaValue)
-		                                       {
-			                                       return new JavaInstance(javaValue);
-		                                       }
-	                                       };
-
-	// should be userdata?
-	static final Coercion arrayCoercion    = new Coercion()
-	                                       {
-		                                       @Override
-		                                       public LuaValue coerce(Object javaValue)
-		                                       {
-			                                       return new JavaArray(javaValue);
-		                                       }
-	                                       };
 }

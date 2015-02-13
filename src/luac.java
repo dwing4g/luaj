@@ -15,13 +15,13 @@ import org.luaj.vm2.lib.JsePlatform;
  */
 public final class luac
 {
-	private static boolean list         = false;
 	private static String  output       = "luac.out";
-	private static boolean parseonly    = false;
-	private static boolean stripdebug   = false;
-	private static boolean littleendian = false;
 	private static int     numberformat = DumpState.NUMBER_FORMAT_DEFAULT;
-	private static boolean versioninfo  = false;
+	private static boolean list;
+	private static boolean parseonly;
+	private static boolean stripdebug;
+	private static boolean littleendian;
+	private static boolean versioninfo;
 	private static boolean processing   = true;
 
 	private static void usageExit()

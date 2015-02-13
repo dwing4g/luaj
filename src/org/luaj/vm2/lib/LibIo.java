@@ -46,7 +46,7 @@ import org.luaj.vm2.Varargs;
  * @see JseIoLib
  * @see <a href="http://www.lua.org/manual/5.1/manual.html#5.7">http://www.lua.org/manual/5.1/manual.html#5.7</a>
  */
-public class LibIo extends LibFunction1
+public final class LibIo extends LibFunction1
 {
 	abstract protected class LuaFile extends LuaValue
 	{
@@ -105,9 +105,9 @@ public class LibIo extends LibFunction1
 		}
 	}
 
-	private LuaFile               infile       = null;
-	private LuaFile               outfile      = null;
-	private LuaFile               errfile      = null;
+	private LuaFile               infile;
+	private LuaFile               outfile;
+	private LuaFile               errfile;
 
 	private static final LuaValue STDIN        = valueOf("stdin");
 	private static final LuaValue STDOUT       = valueOf("stdout");
@@ -163,10 +163,6 @@ public class LibIo extends LibFunction1
 	                                           };
 
 	LuaTable                      filemethods;
-
-	public LibIo()
-	{
-	}
 
 	@Override
 	public LuaValue call(LuaValue arg)
@@ -500,9 +496,9 @@ public class LibIo extends LibFunction1
 					break item;
 				case LuaValue.TSTRING:
 					fmt = ai.checkstring();
-					if(fmt.m_length == 2 && fmt.m_bytes[fmt.m_offset] == '*')
+					if(fmt._length == 2 && fmt._bytes[fmt._offset] == '*')
 					{
-						switch(fmt.m_bytes[fmt.m_offset + 1])
+						switch(fmt._bytes[fmt._offset + 1])
 						{
 							case 'n':
 								vi = freadnumber(f);
@@ -725,17 +721,17 @@ public class LibIo extends LibFunction1
 
 	private final class LuaFileImpl extends LuaFile
 	{
-		private final RandomAccessFile file;
-		private final InputStream      is;
-		private final OutputStream     os;
-		private boolean                closed   = false;
-		private boolean                nobuffer = false;
+		private final RandomAccessFile _file;
+		private final InputStream      _is;
+		private final OutputStream     _os;
+		private boolean                _closed;
+		private boolean                _nobuffer;
 
 		private LuaFileImpl(RandomAccessFile file, InputStream is, OutputStream os)
 		{
-			this.file = file;
-			this.is = is != null ? is.markSupported() ? is : new BufferedInputStream(is) : null;
-			this.os = os;
+			_file = file;
+			_is = is != null ? is.markSupported() ? is : new BufferedInputStream(is) : null;
+			_os = os;
 		}
 
 		private LuaFileImpl(RandomAccessFile f)
@@ -756,69 +752,69 @@ public class LibIo extends LibFunction1
 		@Override
 		public String tojstring()
 		{
-			return "file (" + this.hashCode() + ")";
+			return "file (" + hashCode() + ")";
 		}
 
 		@Override
 		public boolean isstdfile()
 		{
-			return file == null;
+			return _file == null;
 		}
 
 		@Override
 		public void close() throws IOException
 		{
-			closed = true;
-			if(file != null)
+			_closed = true;
+			if(_file != null)
 			{
-				file.close();
+				_file.close();
 			}
 		}
 
 		@Override
 		public void flush() throws IOException
 		{
-			if(os != null)
-			    os.flush();
+			if(_os != null)
+			    _os.flush();
 		}
 
 		@Override
 		public void write(LuaString s) throws IOException
 		{
-			if(os != null)
-				os.write(s.m_bytes, s.m_offset, s.m_length);
-			else if(file != null)
-				file.write(s.m_bytes, s.m_offset, s.m_length);
+			if(_os != null)
+				_os.write(s._bytes, s._offset, s._length);
+			else if(_file != null)
+				_file.write(s._bytes, s._offset, s._length);
 			else
 				notimplemented();
-			if(nobuffer)
+			if(_nobuffer)
 			    flush();
 		}
 
 		@Override
 		public boolean isclosed()
 		{
-			return closed;
+			return _closed;
 		}
 
 		@Override
 		public int seek(String option, int pos) throws IOException
 		{
-			if(file != null)
+			if(_file != null)
 			{
 				if("set".equals(option))
 				{
-					file.seek(pos);
+					_file.seek(pos);
 				}
 				else if("end".equals(option))
 				{
-					file.seek(file.length() + pos);
+					_file.seek(_file.length() + pos);
 				}
 				else
 				{
-					file.seek(file.getFilePointer() + pos);
+					_file.seek(_file.getFilePointer() + pos);
 				}
-				return (int)file.getFilePointer();
+				return (int)_file.getFilePointer();
 			}
 			notimplemented();
 			return 0;
@@ -827,32 +823,32 @@ public class LibIo extends LibFunction1
 		@Override
 		public void setvbuf(String mode, int size)
 		{
-			nobuffer = "no".equals(mode);
+			_nobuffer = "no".equals(mode);
 		}
 
 		// get length remaining to read
 		@Override
 		public int remaining() throws IOException
 		{
-			return file != null ? (int)(file.length() - file.getFilePointer()) : -1;
+			return _file != null ? (int)(_file.length() - _file.getFilePointer()) : -1;
 		}
 
 		// peek ahead one character
 		@Override
 		public int peek() throws IOException
 		{
-			if(is != null)
+			if(_is != null)
 			{
-				is.mark(1);
-				int c = is.read();
-				is.reset();
+				_is.mark(1);
+				int c = _is.read();
+				_is.reset();
 				return c;
 			}
-			else if(file != null)
+			else if(_file != null)
 			{
-				long fp = file.getFilePointer();
-				int c = file.read();
-				file.seek(fp);
+				long fp = _file.getFilePointer();
+				int c = _file.read();
+				_file.seek(fp);
 				return c;
 			}
 			notimplemented();
@@ -863,11 +859,11 @@ public class LibIo extends LibFunction1
 		@Override
 		public int read() throws IOException
 		{
-			if(is != null)
-				return is.read();
-			else if(file != null)
+			if(_is != null)
+				return _is.read();
+			else if(_file != null)
 			{
-				return file.read();
+				return _file.read();
 			}
 			notimplemented();
 			return 0;
@@ -877,13 +873,13 @@ public class LibIo extends LibFunction1
 		@Override
 		public int read(byte[] bytes, int offset, int length) throws IOException
 		{
-			if(file != null)
+			if(_file != null)
 			{
-				return file.read(bytes, offset, length);
+				return _file.read(bytes, offset, length);
 			}
-			else if(is != null)
+			else if(_is != null)
 			{
-				return is.read(bytes, offset, length);
+				return _is.read(bytes, offset, length);
 			}
 			else
 			{

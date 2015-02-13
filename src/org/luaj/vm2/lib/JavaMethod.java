@@ -20,7 +20,7 @@ import org.luaj.vm2.Varargs;
  * @see CoerceJavaToLua
  * @see CoerceLuaToJava
  */
-class JavaMethod extends JavaMember
+final class JavaMethod extends JavaMember
 {
 	private static final Map<Method, JavaMember> methods = new ConcurrentHashMap<Method, JavaMember>();
 
@@ -37,12 +37,12 @@ class JavaMethod extends JavaMember
 		return new Overload(m);
 	}
 
-	final Method method;
+	private final Method _method;
 
 	private JavaMethod(Method m)
 	{
 		super(m.getParameterTypes(), m.getModifiers());
-		this.method = m;
+		_method = m;
 		try
 		{
 			if(!m.isAccessible())
@@ -80,7 +80,7 @@ class JavaMethod extends JavaMember
 	@Override
 	public Varargs invoke(Varargs args)
 	{
-		return invokeMethod(args.checkuserdata(1), args.subargs(2));
+		return invokeMethod(args.arg1().checkuserdata(), args.subargs(2));
 	}
 
 	LuaValue invokeMethod(Object instance, Varargs args)
@@ -88,7 +88,7 @@ class JavaMethod extends JavaMember
 		Object[] a = convertArgs(args);
 		try
 		{
-			return CoerceJavaToLua.coerce(method.invoke(instance, a));
+			return CoerceJavaToLua.coerce(_method.invoke(instance, a));
 		}
 		catch(InvocationTargetException e)
 		{
@@ -109,13 +109,13 @@ class JavaMethod extends JavaMember
 	 * It is returned by calls to calls to {@link JavaInstance#get(LuaValue key)}
 	 * when an overloaded method is named.
 	 */
-	static class Overload extends LuaFunction
+	private static class Overload extends LuaFunction
 	{
-		final JavaMethod[] _methods;
+		private final JavaMethod[] _methods;
 
-		Overload(JavaMethod[] methods)
+		private Overload(JavaMethod[] methods)
 		{
-			this._methods = methods;
+			_methods = methods;
 		}
 
 		@Override
@@ -145,7 +145,7 @@ class JavaMethod extends JavaMember
 		@Override
 		public Varargs invoke(Varargs args)
 		{
-			return invokeBestMethod(args.checkuserdata(1), args.subargs(2));
+			return invokeBestMethod(args.arg1().checkuserdata(), args.subargs(2));
 		}
 
 		@SuppressWarnings("null")

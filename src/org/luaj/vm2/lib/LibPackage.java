@@ -35,11 +35,11 @@ import org.luaj.vm2.Varargs;
  * @see JsePlatform
  * @see <a href="http://www.lua.org/manual/5.1/manual.html#5.3">http://www.lua.org/manual/5.1/manual.html#5.3</a>
  */
-public class LibPackage extends LibFunction1
+public final class LibPackage extends LibFunction1
 {
 	public static String           DEFAULT_LUA_PATH  = "?.lua";
 
-	public InputStream             STDIN             = null;
+	public InputStream             STDIN;
 	public PrintStream             STDOUT            = System.out;
 	public LuaTable                LOADED;
 	public LuaTable                PACKAGE;
@@ -103,14 +103,14 @@ public class LibPackage extends LibFunction1
 
 	static final class PkgLib1 extends LibFunction1
 	{
-		LibPackage lib;
+		LibPackage _lib;
 
 		public PkgLib1(LuaValue env, String name, int opcode, LibPackage lib)
 		{
-			this._env = env;
-			this._name = name;
-			this._opcode = opcode;
-			this.lib = lib;
+			_env = env;
+			_name = name;
+			_opcode = opcode;
+			_lib = lib;
 		}
 
 		@Override
@@ -119,7 +119,7 @@ public class LibPackage extends LibFunction1
 			switch(_opcode)
 			{
 				case OP_REQUIRE:
-					return lib.require(arg);
+					return _lib.require(arg);
 				case OP_SEEALL:
 				{
 					LuaTable t = arg.checktable();
@@ -136,14 +136,14 @@ public class LibPackage extends LibFunction1
 
 	static final class PkgLibV extends LibFunctionV
 	{
-		LibPackage lib;
+		LibPackage _lib;
 
 		public PkgLibV(LuaValue env, String name, int opcode, LibPackage lib)
 		{
-			this._env = env;
-			this._name = name;
-			this._opcode = opcode;
-			this.lib = lib;
+			_env = env;
+			_name = name;
+			_opcode = opcode;
+			_lib = lib;
 		}
 
 		@Override
@@ -152,20 +152,20 @@ public class LibPackage extends LibFunction1
 			switch(_opcode)
 			{
 				case OP_MODULE:
-					return lib.module(args);
+					return _lib.module(args);
 				case OP_LOADLIB:
 					return loadlib(args);
 				case OP_PRELOAD_LOADER:
 				{
-					return lib.loader_preload(args);
+					return _lib.loader_preload(args);
 				}
 				case OP_LUA_LOADER:
 				{
-					return lib.loader_Lua(args);
+					return _lib.loader_Lua(args);
 				}
 				case OP_JAVA_LOADER:
 				{
-					return lib.loader_Java(args);
+					return _lib.loader_Java(args);
 				}
 			}
 			return NONE;
@@ -257,14 +257,14 @@ public class LibPackage extends LibFunction1
 	 * @param fname the name to look up or create, such as "abc.def.ghi"
 	 * @return the table for that name, possible a new one, or null if a non-table has that name already.
 	 */
-	private static final LuaValue findtable(LuaValue table, LuaString fname)
+	private static LuaValue findtable(LuaValue table, LuaString fname)
 	{
 		int b, e = (-1);
 		do
 		{
 			e = fname.indexOf(_DOT, b = e + 1);
 			if(e < 0)
-			    e = fname.m_length;
+			    e = fname._length;
 			LuaString key = fname.substring(b, e);
 			LuaValue val = table.rawget(key);
 			if(val.isnil())
@@ -282,11 +282,11 @@ public class LibPackage extends LibFunction1
 				table = val;
 			}
 		}
-		while(e < fname.m_length);
+		while(e < fname._length);
 		return table;
 	}
 
-	private static final void modinit(LuaValue module, LuaString modname)
+	private static void modinit(LuaValue module, LuaString modname)
 	{
 		/* module._M = module */
 		module.set(_M, module);
@@ -444,7 +444,7 @@ public class LibPackage extends LibFunction1
 	}
 
 	/** Convert lua filename to valid class name */
-	public static final String toClassname(String filename)
+	public static String toClassname(String filename)
 	{
 		int n = filename.length();
 		int j = n;
@@ -459,9 +459,7 @@ public class LibPackage extends LibFunction1
 				for(int i = 0; i < j; i++)
 				{
 					c = filename.charAt(i);
-					sb.append(
-					        (isClassnamePart(c)) ? c :
-					                ((c == '/') || (c == '\\')) ? '.' : '_');
+					sb.append((isClassnamePart(c)) ? c : ((c == '/') || (c == '\\')) ? '.' : '_');
 				}
 				return sb.toString();
 			}
@@ -469,7 +467,7 @@ public class LibPackage extends LibFunction1
 		return n == j ? filename : filename.substring(0, j);
 	}
 
-	private static final boolean isClassnamePart(char c)
+	private static boolean isClassnamePart(char c)
 	{
 		if((c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') || (c >= '0' && c <= '9'))
 		    return true;

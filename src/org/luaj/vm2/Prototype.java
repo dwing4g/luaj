@@ -40,13 +40,13 @@ public class Prototype
 	public LuaString getlocalname(int number, int pc)
 	{
 		int i;
-		for(i = 0; i < locvars.length && locvars[i].startpc <= pc; i++)
+		for(i = 0; i < locvars.length && locvars[i]._startpc <= pc; i++)
 		{
-			if(pc < locvars[i].endpc)
+			if(pc < locvars[i]._endpc)
 			{ /* is variable active? */
 				number--;
 				if(number == 0)
-				    return locvars[i].varname;
+				    return locvars[i]._varname;
 			}
 		}
 		return null; /* not found */

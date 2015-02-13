@@ -13,8 +13,8 @@ import org.luaj.vm2.LuaFunction;
 import org.luaj.vm2.LuaString;
 import org.luaj.vm2.LuaValue;
 import org.luaj.vm2.Prototype;
-import org.luaj.vm2.lib.LibBase;
 import org.luaj.vm2.lib.JsePlatform;
+import org.luaj.vm2.lib.LibBase;
 
 /**
  * Compiler for Lua.
@@ -51,7 +51,7 @@ public class LuaC extends Lua implements LuaCompiler
 	 */
 	public static void install()
 	{
-		LoadState.compiler = instance;
+		LoadState.s_compiler = instance;
 	}
 
 	protected static void _assert(boolean b)
@@ -159,8 +159,8 @@ public class LuaC extends Lua implements LuaCompiler
 		return a;
 	}
 
-	public int                    nCcalls;
-	HashMap<LuaString, LuaString> strings;
+	int                                   _nCcalls;
+	private HashMap<LuaString, LuaString> _strings;
 
 	protected LuaC()
 	{
@@ -168,7 +168,7 @@ public class LuaC extends Lua implements LuaCompiler
 
 	private LuaC(HashMap<LuaString, LuaString> strings)
 	{
-		this.strings = strings;
+		_strings = strings;
 	}
 
 	/** Load into a Closure or LuaFunction, with the supplied initial environment */
@@ -212,14 +212,14 @@ public class LuaC extends Lua implements LuaCompiler
 	public LuaString newTString(byte[] bytes, int offset, int len)
 	{
 		LuaString tmp = LuaString.valueOf(bytes, offset, len);
-		LuaString v = strings.get(tmp);
+		LuaString v = _strings.get(tmp);
 		if(v == null)
 		{
 			// must copy bytes, since bytes could be from reusable buffer
 			byte[] copy = new byte[len];
 			System.arraycopy(bytes, offset, copy, 0, len);
 			v = LuaString.valueOf(copy);
-			strings.put(v, v);
+			_strings.put(v, v);
 		}
 		return v;
 	}

@@ -22,16 +22,16 @@ public final class Buffer
 	private static final byte[] NOBYTES          = {};
 
 	/** Bytes in this buffer */
-	private byte[]              bytes;
-
-	/** Length of this buffer */
-	private int                 length;
+	private byte[]              _bytes;
 
 	/** Offset into the byte array */
-	private int                 offset;
+	private int                 _offset;
+
+	/** Length of this buffer */
+	private int                 _length;
 
 	/** Value of this buffer, when not represented in bytes */
-	private LuaValue            value;
+	private LuaValue            _value;
 
 	/**
 	 * Create buffer with default capacity
@@ -48,10 +48,10 @@ public final class Buffer
 	 */
 	public Buffer(int initialCapacity)
 	{
-		bytes = new byte[initialCapacity];
-		length = 0;
-		offset = 0;
-		value = null;
+		_bytes = new byte[initialCapacity];
+		_offset = 0;
+		_length = 0;
+		_value = null;
 	}
 
 	/**
@@ -60,9 +60,9 @@ public final class Buffer
 	 */
 	public Buffer(LuaValue value)
 	{
-		bytes = NOBYTES;
-		length = offset = 0;
-		this.value = value;
+		_bytes = NOBYTES;
+		_offset = _length = 0;
+		_value = value;
 	}
 
 	/**
@@ -71,7 +71,7 @@ public final class Buffer
 	 */
 	public LuaValue value()
 	{
-		return value != null ? value : this.tostring();
+		return _value != null ? _value : tostring();
 	}
 
 	/**
@@ -80,9 +80,9 @@ public final class Buffer
 	 */
 	public Buffer setvalue(LuaValue value)
 	{
-		bytes = NOBYTES;
-		offset = length = 0;
-		this.value = value;
+		_bytes = NOBYTES;
+		_offset = _length = 0;
+		_value = value;
 		return this;
 	}
 
@@ -90,10 +90,10 @@ public final class Buffer
 	 * Convert the buffer to a {@link LuaString}
 	 * @return the value as a {@link LuaString}
 	 */
-	public final LuaString tostring()
+	public LuaString tostring()
 	{
-		realloc(length, 0);
-		return LuaString.valueOf(bytes, offset, length);
+		realloc(_length, 0);
+		return LuaString.valueOf(_bytes, _offset, _length);
 	}
 
 	/**
@@ -119,10 +119,10 @@ public final class Buffer
 	 * Append a single byte to the buffer.
 	 * @return {@code this} to allow call chaining
 	 */
-	public final Buffer append(byte b)
+	public Buffer append(byte b)
 	{
 		makeroom(0, 1);
-		bytes[offset + length++] = b;
+		_bytes[_offset + _length++] = b;
 		return this;
 	}
 
@@ -130,7 +130,7 @@ public final class Buffer
 	 * Append a {@link LuaValue} to the buffer.
 	 * @return {@code this} to allow call chaining
 	 */
-	public final Buffer append(LuaValue val)
+	public Buffer append(LuaValue val)
 	{
 		append(val.strvalue());
 		return this;
@@ -140,12 +140,12 @@ public final class Buffer
 	 * Append a {@link LuaString} to the buffer.
 	 * @return {@code this} to allow call chaining
 	 */
-	public final Buffer append(LuaString str)
+	public Buffer append(LuaString str)
 	{
-		final int n = str.m_length;
+		final int n = str._length;
 		makeroom(0, n);
-		str.copyInto(0, bytes, offset + length, n);
-		length += n;
+		str.copyInto(0, _bytes, _offset + _length, n);
+		_length += n;
 		return this;
 	}
 
@@ -155,13 +155,13 @@ public final class Buffer
 	 * @return {@code this} to allow call chaining
 	 * @see LuaString#encodeToUtf8(char[], byte[], int)
 	 */
-	public final Buffer append(String str)
+	public Buffer append(String str)
 	{
 		char[] chars = str.toCharArray();
 		final int n = LuaString.lengthAsUtf8(chars);
 		makeroom(0, n);
-		LuaString.encodeToUtf8(chars, bytes, offset + length);
-		length += n;
+		LuaString.encodeToUtf8(chars, _bytes, _offset + _length);
+		_length += n;
 		return this;
 	}
 
@@ -180,7 +180,7 @@ public final class Buffer
 	 */
 	public Buffer concatTo(LuaString lhs)
 	{
-		return value != null && !value.isstring() ? setvalue(lhs.concat(value)) : prepend(lhs);
+		return _value != null && !_value.isstring() ? setvalue(lhs.concat(_value)) : prepend(lhs);
 	}
 
 	/** Concatenate this buffer onto a {@link LuaNumber}
@@ -191,7 +191,7 @@ public final class Buffer
 	 */
 	public Buffer concatTo(LuaNumber lhs)
 	{
-		return value != null && !value.isstring() ? setvalue(lhs.concat(value)) : prepend(lhs.strvalue());
+		return _value != null && !_value.isstring() ? setvalue(lhs.concat(_value)) : prepend(lhs.strvalue());
 	}
 
 	/** Concatenate bytes from a {@link LuaString} onto the front of this buffer
@@ -200,12 +200,12 @@ public final class Buffer
 	 */
 	public Buffer prepend(LuaString s)
 	{
-		int n = s.m_length;
+		int n = s._length;
 		makeroom(n, 0);
-		System.arraycopy(s.m_bytes, s.m_offset, bytes, offset - n, n);
-		offset -= n;
-		length += n;
-		value = null;
+		System.arraycopy(s._bytes, s._offset, _bytes, _offset - n, n);
+		_offset -= n;
+		_length += n;
+		_value = null;
 		return this;
 	}
 
@@ -213,22 +213,22 @@ public final class Buffer
 	 * @param nbefore number of unused bytes which must precede the data after this completes
 	 * @param nafter number of unused bytes which must follow the data after this completes
 	 */
-	public final void makeroom(int nbefore, int nafter)
+	public void makeroom(int nbefore, int nafter)
 	{
-		if(value != null)
+		if(_value != null)
 		{
-			LuaString s = value.strvalue();
-			value = null;
-			length = s.m_length;
-			offset = nbefore;
-			bytes = new byte[nbefore + length + nafter];
-			System.arraycopy(s.m_bytes, s.m_offset, bytes, offset, length);
+			LuaString s = _value.strvalue();
+			_value = null;
+			_length = s._length;
+			_offset = nbefore;
+			_bytes = new byte[nbefore + _length + nafter];
+			System.arraycopy(s._bytes, s._offset, _bytes, _offset, _length);
 		}
-		else if(offset + length + nafter > bytes.length || offset < nbefore)
+		else if(_offset + _length + nafter > _bytes.length || _offset < nbefore)
 		{
-			int n = nbefore + length + nafter;
-			int m = n < 32 ? 32 : n < length * 2 ? length * 2 : n;
-			realloc(m, nbefore == 0 ? 0 : m - length - nafter);
+			int n = nbefore + _length + nafter;
+			int m = n < 32 ? 32 : n < _length * 2 ? _length * 2 : n;
+			realloc(m, nbefore == 0 ? 0 : m - _length - nafter);
 		}
 	}
 
@@ -236,14 +236,14 @@ public final class Buffer
 	 * @param newSize the size of the buffer to use
 	 * @param newOffset the offset to use
 	 */
-	private final void realloc(int newSize, int newOffset)
+	private void realloc(int newSize, int newOffset)
 	{
-		if(newSize != bytes.length)
+		if(newSize != _bytes.length)
 		{
 			byte[] newBytes = new byte[newSize];
-			System.arraycopy(bytes, offset, newBytes, newOffset, length);
-			bytes = newBytes;
-			offset = newOffset;
+			System.arraycopy(_bytes, _offset, newBytes, newOffset, _length);
+			_bytes = newBytes;
+			_offset = newOffset;
 		}
 	}
 }

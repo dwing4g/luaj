@@ -24,7 +24,7 @@ import org.luaj.vm2.LuaValue;
  * @see CoerceJavaToLua
  * @see CoerceLuaToJava
  */
-class JavaClass extends JavaInstance implements CoerceJavaToLua.Coercion
+final class JavaClass extends JavaInstance implements CoerceJavaToLua.Coercion
 {
 	private static final ConcurrentHashMap<Class<?>, JavaClass> classes = new ConcurrentHashMap<Class<?>, JavaClass>();
 
@@ -42,7 +42,7 @@ class JavaClass extends JavaInstance implements CoerceJavaToLua.Coercion
 	JavaClass(Class<?> c)
 	{
 		super(c);
-		this.jclass = this;
+		_jclass = this;
 	}
 
 	@Override
@@ -56,7 +56,7 @@ class JavaClass extends JavaInstance implements CoerceJavaToLua.Coercion
 		if(_fields == null)
 		{
 			HashMap<LuaString, Field> m = new HashMap<LuaString, Field>();
-			Field[] f = ((Class<?>)m_instance).getFields();
+			Field[] f = ((Class<?>)_instance).getFields();
 			for(int i = 0; i < f.length; i++)
 			{
 				Field fi = f[i];
@@ -83,7 +83,7 @@ class JavaClass extends JavaInstance implements CoerceJavaToLua.Coercion
 		if(_methods == null)
 		{
 			HashMap<String, List<JavaMethod>> namedlists = new HashMap<String, List<JavaMethod>>();
-			Method[] m = ((Class<?>)m_instance).getMethods();
+			Method[] m = ((Class<?>)_instance).getMethods();
 			for(int i = 0; i < m.length; i++)
 			{
 				Method mi = m[i];
@@ -97,7 +97,7 @@ class JavaClass extends JavaInstance implements CoerceJavaToLua.Coercion
 				}
 			}
 			HashMap<LuaValue, Object> map = new HashMap<LuaValue, Object>();
-			Constructor<?>[] c = ((Class<?>)m_instance).getConstructors();
+			Constructor<?>[] c = ((Class<?>)_instance).getConstructors();
 			List<JavaConstructor> list = new ArrayList<JavaConstructor>();
 			for(int i = 0; i < c.length; i++)
 				if(Modifier.isPublic(c[i].getModifiers()))

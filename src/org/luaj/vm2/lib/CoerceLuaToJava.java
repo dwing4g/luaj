@@ -34,7 +34,7 @@ import org.luaj.vm2.LuaValue;
  * @see LibLuajava
  * @see CoerceJavaToLua
  */
-public class CoerceLuaToJava
+public final class CoerceLuaToJava
 {
 	static int SCORE_NULL_VALUE  = 0x10;
 	static int SCORE_WRONG_TYPE  = 0x100;
@@ -60,7 +60,7 @@ public class CoerceLuaToJava
 
 	private static final Map<Class<?>, Coercion> COERCIONS = new ConcurrentHashMap<Class<?>, Coercion>();
 
-	static final class BoolCoercion implements Coercion
+	private static final class BoolCoercion implements Coercion
 	{
 		@Override
 		public String toString()
@@ -86,7 +86,7 @@ public class CoerceLuaToJava
 		}
 	}
 
-	static final class NumericCoercion implements Coercion
+	private static final class NumericCoercion implements Coercion
 	{
 		static final int      TARGET_TYPE_BYTE   = 0;
 		static final int      TARGET_TYPE_CHAR   = 1;
@@ -96,17 +96,17 @@ public class CoerceLuaToJava
 		static final int      TARGET_TYPE_FLOAT  = 5;
 		static final int      TARGET_TYPE_DOUBLE = 6;
 		static final String[] TYPE_NAMES         = { "byte", "char", "short", "int", "long", "float", "double" };
-		final int             targetType;
+		final int             _targetType;
 
 		@Override
 		public String toString()
 		{
-			return "NumericCoercion(" + TYPE_NAMES[targetType] + ")";
+			return "NumericCoercion(" + TYPE_NAMES[_targetType] + ")";
 		}
 
 		NumericCoercion(int targetType)
 		{
-			this.targetType = targetType;
+			_targetType = targetType;
 		}
 
 		@Override
@@ -114,7 +114,7 @@ public class CoerceLuaToJava
 		{
 			if(value.isint())
 			{
-				switch(targetType)
+				switch(_targetType)
 				{
 					case TARGET_TYPE_BYTE:
 					{
@@ -148,7 +148,7 @@ public class CoerceLuaToJava
 			}
 			else if(value.isnumber())
 			{
-				switch(targetType)
+				switch(_targetType)
 				{
 					case TARGET_TYPE_BYTE:
 						return SCORE_WRONG_TYPE;
@@ -186,7 +186,7 @@ public class CoerceLuaToJava
 		@Override
 		public Object coerce(LuaValue value)
 		{
-			switch(targetType)
+			switch(_targetType)
 			{
 				case TARGET_TYPE_BYTE:
 					return new Byte((byte)value.toint());
@@ -208,21 +208,21 @@ public class CoerceLuaToJava
 		}
 	}
 
-	static final class StringCoercion implements Coercion
+	private static final class StringCoercion implements Coercion
 	{
 		public static final int TARGET_TYPE_STRING = 0;
 		public static final int TARGET_TYPE_BYTES  = 1;
-		final int               targetType;
+		final int               _targetType;
 
 		public StringCoercion(int targetType)
 		{
-			this.targetType = targetType;
+			_targetType = targetType;
 		}
 
 		@Override
 		public String toString()
 		{
-			return "StringCoercion(" + (targetType == TARGET_TYPE_STRING ? "String" : "byte[]") + ")";
+			return "StringCoercion(" + (_targetType == TARGET_TYPE_STRING ? "String" : "byte[]") + ")";
 		}
 
 		@Override
@@ -232,12 +232,12 @@ public class CoerceLuaToJava
 			{
 				case LuaValue.TSTRING:
 					return value.checkstring().isValidUtf8() ?
-					        (targetType == TARGET_TYPE_STRING ? 0 : 1) :
-					        (targetType == TARGET_TYPE_BYTES ? 0 : SCORE_WRONG_TYPE);
+					        (_targetType == TARGET_TYPE_STRING ? 0 : 1) :
+					        (_targetType == TARGET_TYPE_BYTES ? 0 : SCORE_WRONG_TYPE);
 				case LuaValue.TNIL:
 					return SCORE_NULL_VALUE;
 				default:
-					return targetType == TARGET_TYPE_STRING ? SCORE_WRONG_TYPE : SCORE_UNCOERCIBLE;
+					return _targetType == TARGET_TYPE_STRING ? SCORE_WRONG_TYPE : SCORE_UNCOERCIBLE;
 			}
 		}
 
@@ -246,30 +246,30 @@ public class CoerceLuaToJava
 		{
 			if(value.isnil())
 			    return null;
-			if(targetType == TARGET_TYPE_STRING)
+			if(_targetType == TARGET_TYPE_STRING)
 			    return value.tojstring();
 			LuaString s = value.checkstring();
-			byte[] b = new byte[s.m_length];
+			byte[] b = new byte[s._length];
 			s.copyInto(0, b, 0, b.length);
 			return b;
 		}
 	}
 
-	static final class ArrayCoercion implements Coercion
+	private static final class ArrayCoercion implements Coercion
 	{
-		final Class<?> componentType;
-		final Coercion componentCoercion;
+		final Class<?> _componentType;
+		final Coercion _componentCoercion;
 
 		public ArrayCoercion(Class<?> componentType)
 		{
-			this.componentType = componentType;
-			this.componentCoercion = getCoercion(componentType);
+			_componentType = componentType;
+			_componentCoercion = getCoercion(componentType);
 		}
 
 		@Override
 		public String toString()
 		{
-			return "ArrayCoercion(" + componentType.getName() + ")";
+			return "ArrayCoercion(" + _componentType.getName() + ")";
 		}
 
 		@Override
@@ -278,9 +278,9 @@ public class CoerceLuaToJava
 			switch(value.type())
 			{
 				case LuaValue.TTABLE:
-					return value.length() == 0 ? 0 : componentCoercion.score(value.get(1));
+					return value.length() == 0 ? 0 : _componentCoercion.score(value.get(1));
 				case LuaValue.TUSERDATA:
-					return inheritanceLevels(componentType, value.touserdata().getClass().getComponentType());
+					return inheritanceLevels(_componentType, value.touserdata().getClass().getComponentType());
 				case LuaValue.TNIL:
 					return SCORE_NULL_VALUE;
 				default:
@@ -296,9 +296,9 @@ public class CoerceLuaToJava
 				case LuaValue.TTABLE:
 				{
 					int n = value.length();
-					Object a = Array.newInstance(componentType, n);
+					Object a = Array.newInstance(_componentType, n);
 					for(int i = 0; i < n; i++)
-						Array.set(a, i, componentCoercion.coerce(value.get(i + 1)));
+						Array.set(a, i, _componentCoercion.coerce(value.get(i + 1)));
 					return a;
 				}
 				case LuaValue.TUSERDATA:
@@ -319,7 +319,7 @@ public class CoerceLuaToJava
 	 * @return number of inheritance levels between subclass and baseclass,
 	 * or SCORE_UNCOERCIBLE if not a subclass
 	 */
-	static final int inheritanceLevels(Class<?> baseclass, Class<?> subclass)
+	private static int inheritanceLevels(Class<?> baseclass, Class<?> subclass)
 	{
 		if(subclass == null)
 		    return SCORE_UNCOERCIBLE;
@@ -332,19 +332,19 @@ public class CoerceLuaToJava
 		return min;
 	}
 
-	static final class ObjectCoercion implements Coercion
+	private static final class ObjectCoercion implements Coercion
 	{
-		final Class<?> targetType;
+		final Class<?> _targetType;
 
 		ObjectCoercion(Class<?> targetType)
 		{
-			this.targetType = targetType;
+			_targetType = targetType;
 		}
 
 		@Override
 		public String toString()
 		{
-			return "ObjectCoercion(" + targetType.getName() + ")";
+			return "ObjectCoercion(" + _targetType.getName() + ")";
 		}
 
 		@Override
@@ -353,17 +353,17 @@ public class CoerceLuaToJava
 			switch(value.type())
 			{
 				case LuaValue.TNUMBER:
-					return inheritanceLevels(targetType, value.isint() ? Integer.class : Double.class);
+					return inheritanceLevels(_targetType, value.isint() ? Integer.class : Double.class);
 				case LuaValue.TBOOLEAN:
-					return inheritanceLevels(targetType, Boolean.class);
+					return inheritanceLevels(_targetType, Boolean.class);
 				case LuaValue.TSTRING:
-					return inheritanceLevels(targetType, String.class);
+					return inheritanceLevels(_targetType, String.class);
 				case LuaValue.TUSERDATA:
-					return inheritanceLevels(targetType, value.touserdata().getClass());
+					return inheritanceLevels(_targetType, value.touserdata().getClass());
 				case LuaValue.TNIL:
 					return SCORE_NULL_VALUE;
 				default:
-					return inheritanceLevels(targetType, value.getClass());
+					return inheritanceLevels(_targetType, value.getClass());
 			}
 		}
 
@@ -379,7 +379,7 @@ public class CoerceLuaToJava
 				case LuaValue.TSTRING:
 					return value.tojstring();
 				case LuaValue.TUSERDATA:
-					return value.optuserdata(targetType, null);
+					return value.optuserdata(_targetType, null);
 				case LuaValue.TNIL:
 					return null;
 				default:

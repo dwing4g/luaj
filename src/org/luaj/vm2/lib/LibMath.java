@@ -46,13 +46,9 @@ import org.luaj.vm2.Varargs;
  * @see LibFunction
  * @see <a href="http://www.lua.org/manual/5.1/manual.html#5.6">http://www.lua.org/manual/5.1/manual.html#5.6</a>
  */
-public class LibMath extends LibFunction1
+public final class LibMath extends LibFunction1
 {
 	private Random random;
-
-	public LibMath()
-	{
-	}
 
 	@Override
 	public LuaValue call(LuaValue arg)

@@ -14,12 +14,12 @@ import org.luaj.vm2.lib.LibDebug;
  * This is analagous to the fact that any lua script can throw a lua error at any time.
  * <p>
  */
-public class LuaError extends RuntimeException
+public final class LuaError extends RuntimeException
 {
 	private static final long serialVersionUID = 1L;
 
-	private String            traceback;
-	private Throwable         cause;
+	private String            _traceback;
+	private Throwable         _cause;
 
 	/**
 	 *  Run the error hook if there is one
@@ -28,10 +28,10 @@ public class LuaError extends RuntimeException
 	private static String errorHook(String msg)
 	{
 		LuaThread thread = LuaThread.getRunning();
-		if(thread.err != null)
+		if(thread._err != null)
 		{
-			LuaValue errfunc = thread.err;
-			thread.err = null;
+			LuaValue errfunc = thread._err;
+			thread._err = null;
 			try
 			{
 				return errfunc.call(LuaValue.valueOf(msg)).tojstring();
@@ -42,7 +42,7 @@ public class LuaError extends RuntimeException
 			}
 			finally
 			{
-				thread.err = errfunc;
+				thread._err = errfunc;
 			}
 		}
 		return msg;
@@ -56,8 +56,8 @@ public class LuaError extends RuntimeException
 	public LuaError(Throwable cause)
 	{
 		super(errorHook(addFileLine("vm error: " + cause)));
-		this.cause = cause;
-		this.traceback = LibDebug.traceback(1);
+		_cause = cause;
+		_traceback = LibDebug.traceback(1);
 	}
 
 	/**
@@ -68,7 +68,7 @@ public class LuaError extends RuntimeException
 	public LuaError(String message)
 	{
 		super(errorHook(addFileLine(message)));
-		this.traceback = LibDebug.traceback(1);
+		_traceback = LibDebug.traceback(1);
 	}
 
 	/**
@@ -79,7 +79,7 @@ public class LuaError extends RuntimeException
 	public LuaError(String message, int level)
 	{
 		super(errorHook(addFileLine(message, level)));
-		this.traceback = LibDebug.traceback(1);
+		_traceback = LibDebug.traceback(1);
 	}
 
 	/**
@@ -110,8 +110,8 @@ public class LuaError extends RuntimeException
 	public void printStackTrace()
 	{
 		System.out.println(toString());
-		if(traceback != null)
-		    System.out.println(traceback);
+		if(_traceback != null)
+		    System.out.println(_traceback);
 	}
 
 	/**
@@ -121,6 +121,6 @@ public class LuaError extends RuntimeException
 	@Override
 	public Throwable getCause()
 	{
-		return cause;
+		return _cause;
 	}
 }

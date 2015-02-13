@@ -20,7 +20,7 @@ import org.luaj.vm2.Varargs;
  * @see CoerceJavaToLua
  * @see CoerceLuaToJava
  */
-class JavaConstructor extends JavaMember
+final class JavaConstructor extends JavaMember
 {
 	private static final Map<Constructor<?>, JavaConstructor> constructors = new ConcurrentHashMap<Constructor<?>, JavaConstructor>();
 
@@ -37,12 +37,12 @@ class JavaConstructor extends JavaMember
 		return new Overload(array);
 	}
 
-	final Constructor<?> constructor;
+	final Constructor<?> _constructor;
 
 	private JavaConstructor(Constructor<?> c)
 	{
 		super(c.getParameterTypes(), c.getModifiers());
-		this.constructor = c;
+		_constructor = c;
 	}
 
 	@Override
@@ -51,7 +51,7 @@ class JavaConstructor extends JavaMember
 		Object[] a = convertArgs(args);
 		try
 		{
-			return CoerceJavaToLua.coerce(constructor.newInstance(a));
+			return CoerceJavaToLua.coerce(_constructor.newInstance(a));
 		}
 		catch(InvocationTargetException e)
 		{
@@ -78,7 +78,7 @@ class JavaConstructor extends JavaMember
 
 		public Overload(JavaConstructor[] c)
 		{
-			this._constructors = c;
+			_constructors = c;
 		}
 
 		@SuppressWarnings("null")

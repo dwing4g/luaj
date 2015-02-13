@@ -3,16 +3,16 @@ package org.luaj.vm2;
 /**
  * Data class to hold debug information relatign to local variables for a {@link Prototype}
  */
-public class LocVars
+public final class LocVars
 {
 	/** The local variable name */
-	public LuaString varname;
+	public final LuaString _varname;
 
 	/** The instruction offset when the variable comes into scope */
-	public int       startpc;
+	public int             _startpc;
 
 	/** The instruction offset when the variable goes out of scope */
-	public int       endpc;
+	public int             _endpc;
 
 	/**
 	 * Construct a LocVars instance.
@@ -22,13 +22,13 @@ public class LocVars
 	 */
 	public LocVars(LuaString varname, int startpc, int endpc)
 	{
-		this.varname = varname;
-		this.startpc = startpc;
-		this.endpc = endpc;
+		_varname = varname;
+		_startpc = startpc;
+		_endpc = endpc;
 	}
 
 	public String tojstring()
 	{
-		return varname + " " + startpc + "-" + endpc;
+		return _varname + " " + _startpc + "-" + _endpc;
 	}
 }

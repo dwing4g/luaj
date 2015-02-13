@@ -8,7 +8,7 @@ import org.luaj.vm2.LuaString;
 import org.luaj.vm2.LuaValue;
 import org.luaj.vm2.Prototype;
 
-public class DumpState
+public final class DumpState
 {
 	/** mark for precompiled code (`<esc>Lua') */
 	public static final String  LUA_SIGNATURE                   = "\033Lua";
@@ -40,54 +40,55 @@ public class DumpState
 	/** default number format */
 	public static final int     NUMBER_FORMAT_DEFAULT           = NUMBER_FORMAT_FLOATS_OR_DOUBLES;
 
-	// header fields
-	private boolean             IS_LITTLE_ENDIAN                = false;
-	private int                 NUMBER_FORMAT                   = NUMBER_FORMAT_DEFAULT;
-	private int                 SIZEOF_LUA_NUMBER               = 8;
 	private static final int    SIZEOF_INT                      = 4;
 	private static final int    SIZEOF_SIZET                    = 4;
 	private static final int    SIZEOF_INSTRUCTION              = 4;
 
-	DataOutputStream            writer;
-	boolean                     strip;
-	int                         status;
+	DataOutputStream            _writer;
+	boolean                     _strip;
+	int                         _status;
+
+	// header fields
+	private int                 NUMBER_FORMAT                   = NUMBER_FORMAT_DEFAULT;
+	private int                 SIZEOF_LUA_NUMBER               = 8;
+	private boolean             IS_LITTLE_ENDIAN                = false;
 
 	public DumpState(OutputStream w, boolean strip)
 	{
-		this.writer = new DataOutputStream(w);
-		this.strip = strip;
-		this.status = 0;
+		_writer = new DataOutputStream(w);
+		_strip = strip;
+		_status = 0;
 	}
 
 	void dumpBlock(final byte[] b, int size) throws IOException
 	{
-		writer.write(b, 0, size);
+		_writer.write(b, 0, size);
 	}
 
 	void dumpChar(int b) throws IOException
 	{
-		writer.write(b);
+		_writer.write(b);
 	}
 
 	void dumpInt(int x) throws IOException
 	{
 		if(IS_LITTLE_ENDIAN)
 		{
-			writer.writeByte(x & 0xff);
-			writer.writeByte((x >> 8) & 0xff);
-			writer.writeByte((x >> 16) & 0xff);
-			writer.writeByte((x >> 24) & 0xff);
+			_writer.writeByte(x & 0xff);
+			_writer.writeByte((x >> 8) & 0xff);
+			_writer.writeByte((x >> 16) & 0xff);
+			_writer.writeByte((x >> 24) & 0xff);
 		}
 		else
-			writer.writeInt(x);
+			_writer.writeInt(x);
 	}
 
 	void dumpString(LuaString s) throws IOException
 	{
 		final int len = s.len().toint();
 		dumpInt(len + 1);
-		s.write(writer, 0, len);
-		writer.write(0);
+		s.write(_writer, 0, len);
+		_writer.write(0);
 	}
 
 	void dumpDouble(double d) throws IOException
@@ -100,7 +101,7 @@ public class DumpState
 		}
 		else
 		{
-			writer.writeLong(l);
+			_writer.writeLong(l);
 		}
 	}
 
@@ -124,34 +125,34 @@ public class DumpState
 			switch(o.type())
 			{
 				case LuaValue.TNIL:
-					writer.write(LuaValue.TNIL);
+					_writer.write(LuaValue.TNIL);
 					break;
 				case LuaValue.TBOOLEAN:
-					writer.write(LuaValue.TBOOLEAN);
+					_writer.write(LuaValue.TBOOLEAN);
 					dumpChar(o.toboolean() ? 1 : 0);
 					break;
 				case LuaValue.TNUMBER:
 					switch(NUMBER_FORMAT)
 					{
 						case NUMBER_FORMAT_FLOATS_OR_DOUBLES:
-							writer.write(LuaValue.TNUMBER);
+							_writer.write(LuaValue.TNUMBER);
 							dumpDouble(o.todouble());
 							break;
 						case NUMBER_FORMAT_INTS_ONLY:
 							if(!ALLOW_INTEGER_CASTING && !o.isint())
 							    throw new IllegalArgumentException("not an integer: " + o);
-							writer.write(LuaValue.TNUMBER);
+							_writer.write(LuaValue.TNUMBER);
 							dumpInt(o.toint());
 							break;
 						case NUMBER_FORMAT_NUM_PATCH_INT32:
 							if(o.isint())
 							{
-								writer.write(LuaValue.TINT);
+								_writer.write(LuaValue.TINT);
 								dumpInt(o.toint());
 							}
 							else
 							{
-								writer.write(LuaValue.TNUMBER);
+								_writer.write(LuaValue.TNUMBER);
 								dumpDouble(o.todouble());
 							}
 							break;
@@ -160,7 +161,7 @@ public class DumpState
 					}
 					break;
 				case LuaValue.TSTRING:
-					writer.write(LuaValue.TSTRING);
+					_writer.write(LuaValue.TSTRING);
 					dumpString((LuaString)o);
 					break;
 				default:
@@ -176,20 +177,20 @@ public class DumpState
 	void dumpDebug(final Prototype f) throws IOException
 	{
 		int i, n;
-		n = (strip) ? 0 : f.lineinfo.length;
+		n = (_strip) ? 0 : f.lineinfo.length;
 		dumpInt(n);
 		for(i = 0; i < n; i++)
 			dumpInt(f.lineinfo[i]);
-		n = (strip) ? 0 : f.locvars.length;
+		n = (_strip) ? 0 : f.locvars.length;
 		dumpInt(n);
 		for(i = 0; i < n; i++)
 		{
 			LocVars lvi = f.locvars[i];
-			dumpString(lvi.varname);
-			dumpInt(lvi.startpc);
-			dumpInt(lvi.endpc);
+			dumpString(lvi._varname);
+			dumpInt(lvi._startpc);
+			dumpInt(lvi._endpc);
 		}
-		n = (strip) ? 0 : f.upvalues.length;
+		n = (_strip) ? 0 : f.upvalues.length;
 		dumpInt(n);
 		for(i = 0; i < n; i++)
 			dumpString(f.upvalues[i]);
@@ -197,7 +198,7 @@ public class DumpState
 
 	void dumpFunction(final Prototype f, final LuaString string) throws IOException
 	{
-		if(f.source == null || f.source.equals(string) || strip)
+		if(f.source == null || f.source.equals(string) || _strip)
 			dumpInt(0);
 		else
 			dumpString(f.source);
@@ -214,15 +215,15 @@ public class DumpState
 
 	void dumpHeader() throws IOException
 	{
-		writer.write(LUAC_HEADER_SIGNATURE);
-		writer.write(LUAC_VERSION);
-		writer.write(LUAC_FORMAT);
-		writer.write(IS_LITTLE_ENDIAN ? 1 : 0);
-		writer.write(SIZEOF_INT);
-		writer.write(SIZEOF_SIZET);
-		writer.write(SIZEOF_INSTRUCTION);
-		writer.write(SIZEOF_LUA_NUMBER);
-		writer.write(NUMBER_FORMAT);
+		_writer.write(LUAC_HEADER_SIGNATURE);
+		_writer.write(LUAC_VERSION);
+		_writer.write(LUAC_FORMAT);
+		_writer.write(IS_LITTLE_ENDIAN ? 1 : 0);
+		_writer.write(SIZEOF_INT);
+		_writer.write(SIZEOF_SIZET);
+		_writer.write(SIZEOF_INSTRUCTION);
+		_writer.write(SIZEOF_LUA_NUMBER);
+		_writer.write(NUMBER_FORMAT);
 	}
 
 	/*
@@ -233,7 +234,7 @@ public class DumpState
 		DumpState D = new DumpState(w, strip);
 		D.dumpHeader();
 		D.dumpFunction(f, null);
-		return D.status;
+		return D._status;
 	}
 
 	/**
@@ -264,6 +265,6 @@ public class DumpState
 		D.SIZEOF_LUA_NUMBER = (numberFormat == NUMBER_FORMAT_INTS_ONLY ? 4 : 8);
 		D.dumpHeader();
 		D.dumpFunction(f, null);
-		return D.status;
+		return D._status;
 	}
 }

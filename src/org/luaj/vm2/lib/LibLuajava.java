@@ -45,7 +45,7 @@ import org.luaj.vm2.compiler.LuaC;
  * @see LuaC
  * @see <a href="http://www.keplerproject.org/luajava/manual.html#luareference">http://www.keplerproject.org/luajava/manual.html#luareference</a>
  */
-public class LibLuajava extends LibFunctionV
+public final class LibLuajava extends LibFunctionV
 {
 	static final int      INIT                     = 0;
 	static final int      BINDCLASS                = 1;
@@ -63,10 +63,6 @@ public class LibLuajava extends LibFunctionV
 	                                               };
 
 	static final int      METHOD_MODIFIERS_VARARGS = 0x80;
-
-	public LibLuajava()
-	{
-	}
 
 	@Override
 	public Varargs invoke(Varargs args)

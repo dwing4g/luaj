@@ -5,10 +5,10 @@ class InstructionPtr
 	final int[] code;
 	final int   idx;
 
-	InstructionPtr(int[] code, int idx)
+	InstructionPtr(int[] c, int i)
 	{
-		this.code = code;
-		this.idx = idx;
+		code = c;
+		idx = i;
 	}
 
 	int get()

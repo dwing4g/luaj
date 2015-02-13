@@ -2,24 +2,24 @@ package org.luaj.vm2;
 
 public class LuaUserdata extends LuaValue
 {
-	public final Object m_instance;
-	public LuaValue     m_metatable;
+	public final Object _instance;
+	public LuaValue     _metatable;
 
 	public LuaUserdata(Object obj)
 	{
-		m_instance = obj;
+		_instance = obj;
 	}
 
 	public LuaUserdata(Object obj, LuaValue metatable)
 	{
-		m_instance = obj;
-		m_metatable = metatable;
+		_instance = obj;
+		_metatable = metatable;
 	}
 
 	@Override
 	public String tojstring()
 	{
-		return String.valueOf(m_instance);
+		return String.valueOf(_instance);
 	}
 
 	@Override
@@ -37,12 +37,12 @@ public class LuaUserdata extends LuaValue
 	@Override
 	public int hashCode()
 	{
-		return m_instance.hashCode();
+		return _instance.hashCode();
 	}
 
 	public Object userdata()
 	{
-		return m_instance;
+		return _instance;
 	}
 
 	@Override
@@ -54,72 +54,72 @@ public class LuaUserdata extends LuaValue
 	@Override
 	public boolean isuserdata(Class<?> c)
 	{
-		return c.isAssignableFrom(m_instance.getClass());
+		return c.isAssignableFrom(_instance.getClass());
 	}
 
 	@Override
 	public Object touserdata()
 	{
-		return m_instance;
+		return _instance;
 	}
 
 	@Override
 	public Object touserdata(Class<?> c)
 	{
-		return c.isAssignableFrom(m_instance.getClass()) ? m_instance : null;
+		return c.isAssignableFrom(_instance.getClass()) ? _instance : null;
 	}
 
 	@Override
 	public Object optuserdata(Object defval)
 	{
-		return m_instance;
+		return _instance;
 	}
 
 	@Override
 	public Object optuserdata(Class<?> c, Object defval)
 	{
-		if(!c.isAssignableFrom(m_instance.getClass()))
+		if(!c.isAssignableFrom(_instance.getClass()))
 		    typerror(c.getName());
-		return m_instance;
+		return _instance;
 	}
 
 	@Override
 	public LuaValue getmetatable()
 	{
-		return m_metatable;
+		return _metatable;
 	}
 
 	@Override
 	public LuaValue setmetatable(LuaValue metatable)
 	{
-		this.m_metatable = metatable;
+		_metatable = metatable;
 		return this;
 	}
 
 	@Override
 	public Object checkuserdata()
 	{
-		return m_instance;
+		return _instance;
 	}
 
 	@Override
 	public Object checkuserdata(Class<?> c)
 	{
-		if(c.isAssignableFrom(m_instance.getClass()))
-		    return m_instance;
+		if(c.isAssignableFrom(_instance.getClass()))
+		    return _instance;
 		return typerror(c.getName());
 	}
 
 	@Override
 	public LuaValue get(LuaValue key)
 	{
-		return m_metatable != null ? gettable(this, key) : NIL;
+		return _metatable != null ? gettable(this, key) : NIL;
 	}
 
 	@Override
 	public void set(LuaValue key, LuaValue value)
 	{
-		if(m_metatable == null || !settable(this, key, value))
+		if(_metatable == null || !settable(this, key, value))
 		    error("cannot set " + key + " for userdata");
 	}
 
@@ -131,7 +131,7 @@ public class LuaUserdata extends LuaValue
 		if(!(val instanceof LuaUserdata))
 		    return false;
 		LuaUserdata u = (LuaUserdata)val;
-		return m_instance.equals(u.m_instance);
+		return _instance.equals(u._instance);
 	}
 
 	// equality w/ metatable processing
@@ -145,9 +145,9 @@ public class LuaUserdata extends LuaValue
 	public boolean eq_b(LuaValue val)
 	{
 		if(val.raweq(this)) return true;
-		if(m_metatable == null || !val.isuserdata()) return false;
+		if(_metatable == null || !val.isuserdata()) return false;
 		LuaValue valmt = val.getmetatable();
-		return valmt != null && LuaValue.eqmtcall(this, m_metatable, val, valmt);
+		return valmt != null && LuaValue.eqmtcall(this, _metatable, val, valmt);
 	}
 
 	// equality w/o metatable processing
@@ -160,12 +160,12 @@ public class LuaUserdata extends LuaValue
 	@Override
 	public boolean raweq(LuaUserdata val)
 	{
-		return this == val || (m_metatable == val.m_metatable && m_instance.equals(val.m_instance));
+		return this == val || (_metatable == val._metatable && _instance.equals(val._instance));
 	}
 
 	// __eq metatag processing
 	public boolean eqmt(LuaValue val)
 	{
-		return m_metatable != null && val.isuserdata() ? LuaValue.eqmtcall(this, m_metatable, val, val.getmetatable()) : false;
+		return _metatable != null && val.isuserdata() ? LuaValue.eqmtcall(this, _metatable, val, val.getmetatable()) : false;
 	}
 }

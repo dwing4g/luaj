@@ -30,7 +30,7 @@ import org.luaj.vm2.Varargs;
  * @see LibFunction
  * @see <a href="http://www.lua.org/manual/5.1/manual.html#5.2">http://www.lua.org/manual/5.1/manual.html#5.2</a>
  */
-public class LibCoroutine extends LibFunctionV
+public final class LibCoroutine extends LibFunctionV
 {
 	private static final int INIT    = 0;
 	private static final int CREATE  = 1;
@@ -40,10 +40,6 @@ public class LibCoroutine extends LibFunctionV
 	private static final int YIELD   = 5;
 	private static final int WRAP    = 6;
 	private static final int WRAPPED = 7;
-
-	public LibCoroutine()
-	{
-	}
 
 	private LuaTable init()
 	{
@@ -72,7 +68,7 @@ public class LibCoroutine extends LibFunctionV
 			}
 			case RESUME:
 			{
-				final LuaThread t = args.checkthread(1);
+				final LuaThread t = args.arg1().checkthread();
 				return t.resume(args.subargs(2));
 			}
 			case RUNNING:
@@ -82,7 +78,7 @@ public class LibCoroutine extends LibFunctionV
 			}
 			case STATUS:
 			{
-				return valueOf(args.checkthread(1).getStatus());
+				return valueOf(args.arg1().checkthread().getStatus());
 			}
 			case YIELD:
 			{

@@ -71,16 +71,6 @@ public abstract class Varargs
 	// utilities to get specific arguments and type-check them.
 	// -----------------------------------------------------------------------
 
-	/** Tests if argument i is a thread.
-	 * @param i the index of the argument to test, 1 is the first argument
-	 * @return true if the argument exists and is a lua thread, false otherwise
-	 * @see LuaValue.TTHREAD
-	 * */
-	public boolean isthread(int i)
-	{
-		return arg(i).isthread();
-	}
-
 	/** Tests if a value exists at argument i.
 	 * @param i the index of the argument to test, 1 is the first argument
 	 * @return true if the argument exists, false otherwise
@@ -110,24 +100,14 @@ public abstract class Varargs
 		return arg(i).optjstring(defval);
 	}
 
-	/** Return argument i as a double, or throw an error if it cannot be converted to one.
+	/** Return argument i as a LuaValue if it exists, or throw an error.
 	 * @param i the index of the argument to test, 1 is the first argument
-	 * @return java double value if argument i is a number or string that converts to a number
-	 * @exception LuaError if the argument is not a number
+	 * @return LuaValue value if the argument exists
+	 * @exception LuaError if the argument does not exist.
 	 * */
-	public double checkdouble(int i)
+	public LuaValue checkvalue(int i)
 	{
-		return arg(i).checknumber().todouble();
-	}
-
-	/** Return argument i as a function, or throw an error if an incompatible type.
-	 * @param i the index of the argument to test, 1 is the first argument
-	 * @return LuaValue that can be called if argument i is lua function or closure
-	 * @exception LuaError if the argument is not a lua function or closure
-	 * */
-	public LuaValue checkfunction(int i)
-	{
-		return arg(i).checkfunction();
+		return i <= narg() ? arg(i) : LuaValue.argerror(i, "value expected");
 	}
 
 	/** Return argument i as a java int value, discarding any fractional part, or throw an error if not a number.
@@ -150,14 +130,14 @@ public abstract class Varargs
 		return arg(i).checknumber().tolong();
 	}
 
-	/** Return argument i as a java String if a string or number, or throw an error if any other type
+	/** Return argument i as a double, or throw an error if it cannot be converted to one.
 	 * @param i the index of the argument to test, 1 is the first argument
-	 * @return String value if argument i is a string or number
-	 * @exception LuaError if the argument is not a string or number
+	 * @return java double value if argument i is a number or string that converts to a number
+	 * @exception LuaError if the argument is not a number
 	 * */
-	public String checkjstring(int i)
+	public double checkdouble(int i)
 	{
-		return arg(i).checkjstring();
+		return arg(i).checknumber().todouble();
 	}
 
 	/** Return argument i as a LuaString if a string or number, or throw an error if any other type
@@ -170,6 +150,16 @@ public abstract class Varargs
 		return arg(i).checkstring();
 	}
 
+	/** Return argument i as a java String if a string or number, or throw an error if any other type
+	 * @param i the index of the argument to test, 1 is the first argument
+	 * @return String value if argument i is a string or number
+	 * @exception LuaError if the argument is not a string or number
+	 * */
+	public String checkjstring(int i)
+	{
+		return arg(i).checkjstring();
+	}
+
 	/** Return argument i as a LuaTable if a lua table, or throw an error if any other type.
 	 * @param i the index of the argument to test, 1 is the first argument
 	 * @return LuaTable value if a table
@@ -180,46 +170,14 @@ public abstract class Varargs
 		return arg(i).checktable();
 	}
 
-	/** Return argument i as a LuaThread if a lua thread, or throw an error if any other type.
+	/** Return argument i as a function, or throw an error if an incompatible type.
 	 * @param i the index of the argument to test, 1 is the first argument
-	 * @return LuaThread value if a thread
-	 * @exception LuaError if the argument is not a lua thread
+	 * @return LuaValue that can be called if argument i is lua function or closure
+	 * @exception LuaError if the argument is not a lua function or closure
 	 * */
-	public LuaThread checkthread(int i)
+	public LuaValue checkfunction(int i)
 	{
-		return arg(i).checkthread();
-	}
-
-	/** Return argument i as a java Object if a userdata, or throw an error if any other type.
-	 * @param i the index of the argument to test, 1 is the first argument
-	 * @return java Object value if argument i is a userdata
-	 * @exception LuaError if the argument is not a userdata
-	 * */
-	public Object checkuserdata(int i)
-	{
-		return arg(i).checkuserdata();
-	}
-
-	/** Return argument i as a LuaValue if it exists, or throw an error.
-	 * @param i the index of the argument to test, 1 is the first argument
-	 * @return LuaValue value if the argument exists
-	 * @exception LuaError if the argument does not exist.
-	 * */
-	public LuaValue checkvalue(int i)
-	{
-		return i <= narg() ? arg(i) : LuaValue.argerror(i, "value expected");
-	}
-
-	/** Return argument i as a LuaValue when a user-supplied assertion passes, or throw an error.
-	 * @param test user supplied assertion to test against
-	 * @param i the index to report in any error message
-	 * @param msg the error message to use when the test fails
-	 * @return LuaValue value if the value of {@code test} is {@code true}
-	 * @exception LuaError if the the value of {@code test} is {@code false}
-	 * */
-	public static void argcheck(boolean test, int i, String msg)
-	{
-		if(!test) LuaValue.argerror(i, msg);
+		return arg(i).checkfunction();
 	}
 
 	/** Return true if there is no argument or nil at argument i.
@@ -279,36 +237,36 @@ public abstract class Varargs
 	 * Implementation of Varargs for use in the Varargs.subargs() function.
 	 * @see Varargs#subargs(int)
 	 */
-	private static class VarargsSub extends Varargs
+	private static final class VarargsSub extends Varargs
 	{
-		private final Varargs v;
-		private final int     start;
-		private final int     end;
+		private final Varargs _varargs;
+		private final int     _start;
+		private final int     _end;
 
 		public VarargsSub(Varargs varargs, int start, int end)
 		{
-			this.v = varargs;
-			this.start = start;
-			this.end = end;
+			_varargs = varargs;
+			_start = start;
+			_end = end;
 		}
 
 		@Override
 		public LuaValue arg(int i)
 		{
-			i += start - 1;
-			return i >= start && i <= end ? v.arg(i) : LuaValue.NIL;
+			i += _start - 1;
+			return i >= _start && i <= _end ? _varargs.arg(i) : LuaValue.NIL;
 		}
 
 		@Override
 		public LuaValue arg1()
 		{
-			return v.arg(start);
+			return _varargs.arg(_start);
 		}
 
 		@Override
 		public int narg()
 		{
-			return end - start + 1;
+			return _end - _start + 1;
 		}
 	}
 }

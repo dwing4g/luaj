@@ -48,7 +48,7 @@ import org.luaj.vm2.compiler.LuaC;
  * The class ensures that initialization is done in the correct order,
  * and that linkage is made to {@link LuaThread#setGlobals(LuaValue)}.
  */
-public class JsePlatform
+public final class JsePlatform
 {
 	/**
 	 * Create a standard set of globals for JSE including all the libraries.

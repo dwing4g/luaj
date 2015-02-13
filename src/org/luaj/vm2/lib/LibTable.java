@@ -31,18 +31,13 @@ import org.luaj.vm2.Varargs;
  * @see JsePlatform
  * @see <a href="http://www.lua.org/manual/5.1/manual.html#5.5">http://www.lua.org/manual/5.1/manual.html#5.5</a>
  */
-public class LibTable extends LibFunction1
+public final class LibTable extends LibFunction1
 {
-	public LibTable()
-	{
-	}
-
 	private LuaTable init()
 	{
 		LuaTable t = new LuaTable();
 		bind(t, LibTable.class, new String[] { "getn", "maxn", }, 1);
-		bind(t, TableLibV.class, new String[] {
-		        "remove", "concat", "insert", "sort", "foreach", "foreachi", });
+		bind(t, TableLibV.class, new String[] { "remove", "concat", "insert", "sort", "foreach", "foreachi", });
 		_env.set("table", t);
 		LibPackage.instance.LOADED.set("table", t);
 		return t;

@@ -38,7 +38,7 @@ import org.luaj.vm2.Varargs;
  * @see JsePlatform
  * @see <a href="http://www.lua.org/manual/5.1/manual.html#5.8">http://www.lua.org/manual/5.1/manual.html#5.8</a>
  */
-public class LibOs extends LibFunctionV
+public final class LibOs extends LibFunctionV
 {
 	public static String          TMP_PREFIX       = ".luaj";
 	public static String          TMP_SUFFIX       = "tmp";
@@ -82,17 +82,10 @@ public class LibOs extends LibFunctionV
 	/** return code indicating the execute() threw an unknown exception */
 	public static int             EXEC_ERROR       = -3;
 
-	/**
-	 * Create and OsLib instance.
-	 */
-	public LibOs()
-	{
-	}
-
 	public LuaValue init()
 	{
 		LuaTable t = new LuaTable();
-		bind(t, this.getClass(), NAMES, CLOCK);
+		bind(t, getClass(), NAMES, CLOCK);
 		_env.set("os", t);
 		LibPackage.instance.LOADED.set("os", t);
 		return t;
