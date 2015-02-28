@@ -36,7 +36,12 @@ final class JavaClass extends JavaInstance implements CoerceJavaToLua.Coercion
 	static JavaClass forClass(Class<?> c)
 	{
 		JavaClass j = classes.get(c);
-		return j != null ? j : classes.putIfAbsent(c, new JavaClass(c));
+		if(j == null)
+		{
+			JavaClass jj = classes.putIfAbsent(c, j = new JavaClass(c));
+			if(jj != null) j = jj;
+		}
+		return j;
 	}
 
 	JavaClass(Class<?> c)

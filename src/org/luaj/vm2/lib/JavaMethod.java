@@ -2,7 +2,6 @@ package org.luaj.vm2.lib;
 
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
-import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import org.luaj.vm2.LuaError;
 import org.luaj.vm2.LuaFunction;
@@ -22,13 +21,16 @@ import org.luaj.vm2.Varargs;
  */
 final class JavaMethod extends JavaMember
 {
-	private static final Map<Method, JavaMember> methods = new ConcurrentHashMap<Method, JavaMember>();
+	private static final ConcurrentHashMap<Method, JavaMethod> methods = new ConcurrentHashMap<Method, JavaMethod>();
 
 	static JavaMethod forMethod(Method m)
 	{
-		JavaMethod j = (JavaMethod)methods.get(m);
+		JavaMethod j = methods.get(m);
 		if(j == null)
-		    methods.put(m, j = new JavaMethod(m));
+		{
+			JavaMethod jj = methods.putIfAbsent(m, j = new JavaMethod(m));
+			if(jj != null) j = jj;
+		}
 		return j;
 	}
 

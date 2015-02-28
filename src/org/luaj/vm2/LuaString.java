@@ -5,7 +5,7 @@ import java.io.DataOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.lang.ref.WeakReference;
-import java.util.HashMap;
+import java.util.concurrent.ConcurrentHashMap;
 import org.luaj.vm2.lib.LibMath;
 import org.luaj.vm2.lib.LibString;
 
@@ -34,29 +34,18 @@ import org.luaj.vm2.lib.LibString;
 public final class LuaString extends LuaValue
 {
 	/** The singleton instance representing lua {@code true} */
-	public static LuaValue                                         s_metatable;
+	public static LuaValue                                                   s_metatable;
 
 	/** The bytes for the string */
-	public final byte[]                                            _bytes;
+	public final byte[]                                                      _bytes;
 
 	/** The offset into the byte array, 0 means start at the first byte */
-	public final int                                               _offset;
+	public final int                                                         _offset;
 
 	/** The number of bytes that comprise this string */
-	public final int                                               _length;
+	public final int                                                         _length;
 
-	private static final HashMap<String, WeakReference<LuaString>> index_java = new HashMap<String, WeakReference<LuaString>>();
-
-	private static LuaString index_get(HashMap<String, WeakReference<LuaString>> indextable, String key)
-	{
-		WeakReference<LuaString> w = indextable.get(key);
-		return w != null ? (LuaString)w.get() : null;
-	}
-
-	private static void index_set(HashMap<String, WeakReference<LuaString>> indextable, String key, LuaString value)
-	{
-		indextable.put(key, new WeakReference<LuaString>(value));
-	}
+	private static final ConcurrentHashMap<String, WeakReference<LuaString>> index_java = new ConcurrentHashMap<String, WeakReference<LuaString>>();
 
 	/**
 	 * Get a {@link LuaString} instance whose bytes match
@@ -66,13 +55,25 @@ public final class LuaString extends LuaValue
 	 */
 	public static LuaString valueOf(String string)
 	{
-		LuaString s = index_get(index_java, string);
-		if(s != null) return s;
-		char[] c = string.toCharArray();
-		byte[] b = new byte[lengthAsUtf8(c)];
-		encodeToUtf8(c, b, 0);
-		s = valueOf(b, 0, b.length);
-		index_set(index_java, string, s);
+		WeakReference<LuaString> w = index_java.get(string);
+		LuaString s = w != null ? w.get() : null;
+		if(s == null)
+		{
+			char[] c = string.toCharArray();
+			byte[] b = new byte[lengthAsUtf8(c)];
+			encodeToUtf8(c, b, 0);
+			LuaString ss = valueOf(b, 0, b.length);
+			do
+			{
+				if(w != null)
+				    index_java.remove(string, w);
+				WeakReference<LuaString> ww = new WeakReference<LuaString>(ss);
+				w = index_java.putIfAbsent(string, ww);
+				if(w == null) w = ww;
+				s = w.get();
+			}
+			while(s == null);
+		}
 		return s;
 	}
 

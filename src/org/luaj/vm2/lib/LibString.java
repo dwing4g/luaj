@@ -34,7 +34,7 @@ import org.luaj.vm2.compiler.DumpState;
  */
 public final class LibString extends LibFunction1
 {
-	public static LuaTable instance;
+	public static LuaTable instance; // thread-safe for reading
 
 	@Override
 	public LuaValue call(LuaValue arg)

@@ -5,12 +5,12 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
-import org.luaj.vm2.LoadState;
 import org.luaj.vm2.Lua;
 import org.luaj.vm2.LuaFunction;
 import org.luaj.vm2.LuaTable;
 import org.luaj.vm2.LuaValue;
 import org.luaj.vm2.Varargs;
+import org.luaj.vm2.compiler.LuaC;
 import org.luaj.vm2.lib.JsePlatform;
 
 /**
@@ -69,7 +69,7 @@ public final class lua
 			LuaFunction c;
 			try
 			{
-				c = LoadState.load(script, chunkname, _G);
+				c = LuaC.load(script, chunkname, _G);
 			}
 			finally
 			{

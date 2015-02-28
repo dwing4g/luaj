@@ -138,7 +138,7 @@ public final class LibIo extends LibFunction1
 	private static final int      IO_INDEX     = 18;
 	private static final int      LINES_ITER   = 19;
 
-	public static final String[]  IO_NAMES     = {
+	private static final String[] IO_NAMES     = {
 	                                           "close",
 	                                           "flush",
 	                                           "input",
@@ -152,7 +152,7 @@ public final class LibIo extends LibFunction1
 	                                           "write",
 	                                           };
 
-	public static final String[]  FILE_NAMES   = {
+	private static final String[] FILE_NAMES   = {
 	                                           "close",
 	                                           "flush",
 	                                           "lines",

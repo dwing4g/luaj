@@ -1,6 +1,6 @@
 package org.luaj.vm2.lib;
 
-import java.util.HashMap;
+import java.util.concurrent.ConcurrentHashMap;
 import org.luaj.vm2.LuaDouble;
 import org.luaj.vm2.LuaInteger;
 import org.luaj.vm2.LuaString;
@@ -46,7 +46,7 @@ public final class CoerceJavaToLua
 		public LuaValue coerce(Object javaValue);
 	}
 
-	private static final HashMap<Class<?>, Coercion> COERCIONS        = new HashMap<Class<?>, Coercion>();
+	private static final ConcurrentHashMap<Class<?>, Coercion> COERCIONS        = new ConcurrentHashMap<Class<?>, Coercion>();
 
 	static
 	{
@@ -105,24 +105,24 @@ public final class CoerceJavaToLua
 		COERCIONS.put(String.class, stringCoercion);
 	}
 
-	private static final Coercion                    instanceCoercion = new Coercion()
-	                                                                  {
-		                                                                  @Override
-		                                                                  public LuaValue coerce(Object javaValue)
-		                                                                  {
-			                                                                  return new JavaInstance(javaValue);
-		                                                                  }
-	                                                                  };
+	private static final Coercion                              instanceCoercion = new Coercion()
+	                                                                            {
+		                                                                            @Override
+		                                                                            public LuaValue coerce(Object javaValue)
+		                                                                            {
+			                                                                            return new JavaInstance(javaValue);
+		                                                                            }
+	                                                                            };
 
 	// should be userdata?
-	private static final Coercion                    arrayCoercion    = new Coercion()
-	                                                                  {
-		                                                                  @Override
-		                                                                  public LuaValue coerce(Object javaValue)
-		                                                                  {
-			                                                                  return new JavaArray(javaValue);
-		                                                                  }
-	                                                                  };
+	private static final Coercion                              arrayCoercion    = new Coercion()
+	                                                                            {
+		                                                                            @Override
+		                                                                            public LuaValue coerce(Object javaValue)
+		                                                                            {
+			                                                                            return new JavaArray(javaValue);
+		                                                                            }
+	                                                                            };
 
 	/**
 	 * Coerse a Java object to a corresponding lua value.
@@ -148,10 +148,9 @@ public final class CoerceJavaToLua
 		Coercion c = COERCIONS.get(clazz);
 		if(c == null)
 		{
-			c = o instanceof Class ? JavaClass.forClass((Class<?>)o) :
-			        clazz.isArray() ? arrayCoercion :
-			                instanceCoercion;
-			COERCIONS.put(clazz, c);
+			c = o instanceof Class ? JavaClass.forClass((Class<?>)o) : (clazz.isArray() ? arrayCoercion : instanceCoercion);
+			Coercion cc = COERCIONS.putIfAbsent(clazz, c);
+			if(cc != null) c = cc;
 		}
 		return c.coerce(o);
 	}

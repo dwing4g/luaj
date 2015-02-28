@@ -1,7 +1,6 @@
 package org.luaj.vm2.lib;
 
 import java.lang.reflect.Array;
-import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import org.luaj.vm2.LuaString;
 import org.luaj.vm2.LuaTable;
@@ -36,9 +35,9 @@ import org.luaj.vm2.LuaValue;
  */
 public final class CoerceLuaToJava
 {
-	static int SCORE_NULL_VALUE  = 0x10;
-	static int SCORE_WRONG_TYPE  = 0x100;
-	static int SCORE_UNCOERCIBLE = 0x10000;
+	static final int SCORE_NULL_VALUE  = 0x10;
+	static final int SCORE_WRONG_TYPE  = 0x100;
+	static final int SCORE_UNCOERCIBLE = 0x10000;
 
 	static interface Coercion
 	{
@@ -58,7 +57,7 @@ public final class CoerceLuaToJava
 		return getCoercion(clazz).coerce(value);
 	}
 
-	private static final Map<Class<?>, Coercion> COERCIONS = new ConcurrentHashMap<Class<?>, Coercion>();
+	private static final ConcurrentHashMap<Class<?>, Coercion> COERCIONS = new ConcurrentHashMap<Class<?>, Coercion>();
 
 	private static final class BoolCoercion implements Coercion
 	{
@@ -424,13 +423,12 @@ public final class CoerceLuaToJava
 	static Coercion getCoercion(Class<?> c)
 	{
 		Coercion co = COERCIONS.get(c);
-		if(co != null)
-		    return co;
-		if(c.isArray())
-			co = new ArrayCoercion(c.getComponentType());
-		else
-			co = new ObjectCoercion(c);
-		COERCIONS.put(c, co);
+		if(co == null)
+		{
+			co = c.isArray() ? new ArrayCoercion(c.getComponentType()) : new ObjectCoercion(c);
+			Coercion cc = COERCIONS.putIfAbsent(c, co);
+			if(cc != null) co = cc;
+		}
 		return co;
 	}
 }

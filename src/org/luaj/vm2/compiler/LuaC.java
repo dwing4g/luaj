@@ -4,7 +4,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.HashMap;
 import org.luaj.vm2.LoadState;
-import org.luaj.vm2.LoadState.LuaCompiler;
 import org.luaj.vm2.LocVars;
 import org.luaj.vm2.Lua;
 import org.luaj.vm2.LuaClosure;
@@ -41,28 +40,17 @@ import org.luaj.vm2.lib.LibBase;
  * @see LuaValue
  * @see Prototype
  */
-public class LuaC extends Lua implements LuaCompiler
+public class LuaC extends Lua
 {
-	public static final LuaC instance = new LuaC();
-
-	/** Install the compiler so that LoadState will first
-	 * try to use it when handed bytes that are
-	 * not already a compiled lua chunk.
-	 */
-	public static void install()
-	{
-		LoadState.s_compiler = instance;
-	}
+	static final int MAXSTACK         = 250;
+	static final int LUAI_MAXUPVALUES = 60;
+	static final int LUAI_MAXVARS     = 200;
 
 	protected static void _assert(boolean b)
 	{
 		if(!b)
 		    throw new LuaError("compiler assert failed");
 	}
-
-	public static final int MAXSTACK         = 250;
-	static final int        LUAI_MAXUPVALUES = 60;
-	static final int        LUAI_MAXVARS     = 200;
 
 	static void SET_OPCODE(InstructionPtr i, int o)
 	{
@@ -162,7 +150,7 @@ public class LuaC extends Lua implements LuaCompiler
 	int                                   _nCcalls;
 	private HashMap<LuaString, LuaString> _strings;
 
-	protected LuaC()
+	public LuaC()
 	{
 	}
 
@@ -171,9 +159,15 @@ public class LuaC extends Lua implements LuaCompiler
 		_strings = strings;
 	}
 
-	/** Load into a Closure or LuaFunction, with the supplied initial environment */
-	@Override
-	public LuaFunction load(InputStream stream, String name, LuaValue env) throws IOException
+	/**
+	 * Load lua in either binary or text form from an input stream.
+	 * Load into a Closure or LuaFunction, with the supplied initial environment
+	 * @param stream InputStream to read, after having read the first byte already
+	 * @param name Name to apply to the loaded chunk
+	 * @return {@link Prototype} that was loaded
+	 * @throws IOException if an IOException occurs
+	 */
+	public static LuaFunction load(InputStream stream, String name, LuaValue env) throws IOException
 	{
 		return new LuaClosure(compile(stream, name), env);
 	}

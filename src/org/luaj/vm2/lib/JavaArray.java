@@ -17,7 +17,7 @@ import org.luaj.vm2.LuaValue;
  */
 final class JavaArray extends LuaUserdata
 {
-	static final LuaValue LENGTH = valueOf("length");
+	private static final LuaValue LENGTH = valueOf("length");
 
 	JavaArray(Object instance)
 	{

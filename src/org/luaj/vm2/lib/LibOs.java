@@ -40,8 +40,8 @@ import org.luaj.vm2.Varargs;
  */
 public final class LibOs extends LibFunctionV
 {
-	public static String          TMP_PREFIX       = ".luaj";
-	public static String          TMP_SUFFIX       = "tmp";
+	private static final String   TMP_PREFIX       = ".luaj";
+	private static final String   TMP_SUFFIX       = "tmp";
 
 	private static final int      INIT             = 0;
 	private static final int      CLOCK            = 1;

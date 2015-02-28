@@ -37,7 +37,7 @@ import org.luaj.vm2.Varargs;
  */
 public final class LibPackage extends LibFunction1
 {
-	public static String           DEFAULT_LUA_PATH  = "?.lua";
+	public static final String     DEFAULT_LUA_PATH  = "?.lua";
 
 	public InputStream             STDIN;
 	public PrintStream             STDOUT            = System.out;
@@ -45,7 +45,7 @@ public final class LibPackage extends LibFunction1
 	public LuaTable                PACKAGE;
 
 	/** Most recent instance of PackageLib */
-	public static LibPackage       instance;
+	public static LibPackage       instance;                               // almost thread-safe
 
 	/** Loader that loads from preload table if found there */
 	public LuaValue                preload_loader;

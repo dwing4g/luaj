@@ -35,8 +35,6 @@ import java.io.InputStream;
 * @see LuaCompiler
 * @see LuaClosure
 * @see LuaFunction
-* @see LoadState#s_compiler
-* @see LoadState#load(InputStream, String, LuaValue)
 */
 public final class LoadState
 {
@@ -84,32 +82,15 @@ public final class LoadState
 	/** size of header of binary files */
 	public static final int          LUAC_HEADERSIZE                 = 12;
 
-	/** Compiler instance, if installed */
-	public static LuaCompiler        s_compiler;
-
-	/** Interface for the compiler, if it is installed.
-	 * <p>
-	 * See the {@link LuaClosure} documentation for examples of how to use the compiler.
-	 * @see LuaClosure
-	 * @see #load(InputStream, String, LuaValue)
-	 * */
-	public interface LuaCompiler
-	{
-
-		/** Load into a Closure or LuaFunction from a Stream and initializes the environment
-		 * @throws IOException */
-		public LuaFunction load(InputStream stream, String filename, LuaValue env) throws IOException;
-	}
-
 	/** input stream from which we are loading */
-	private final DataInputStream _is;
+	private final DataInputStream    _is;
 
 	/** Read buffer */
-	private byte[]                _buf = new byte[512];
+	private byte[]                   _buf                            = new byte[512];
 
-	private int                   _luacSizeofSizeT;
-	private int                   _luacNumberFormat;
-	private boolean               _luacLittleEndian;
+	private int                      _luacSizeofSizeT;
+	private int                      _luacNumberFormat;
+	private boolean                  _luacLittleEndian;
 
 	/** Load a 4-byte int value from the input stream
 	 * @return the int value laoded.
@@ -330,26 +311,6 @@ public final class LoadState
 		_is.readByte();
 		_is.readByte();
 		_luacNumberFormat = _is.readByte();
-	}
-
-	/**
-	 * Load lua in either binary or text form from an input stream.
-	 * @param firstByte the first byte of the input stream
-	 * @param stream InputStream to read, after having read the first byte already
-	 * @param name Name to apply to the loaded chunk
-	 * @return {@link Prototype} that was loaded
-	 * @throws IllegalArgumentException if the signature is bac
-	 * @throws IOException if an IOException occurs
-	 */
-	public static LuaFunction load(InputStream stream, String name, LuaValue env) throws IOException
-	{
-		if(s_compiler != null)
-		    return s_compiler.load(stream, name, env);
-		int firstByte = stream.read();
-		if(firstByte != LUA_SIGNATURE[0])
-		    throw new LuaError("no compiler");
-		Prototype p = loadBinaryChunk(firstByte, stream, name);
-		return new LuaClosure(p, env);
 	}
 
 	/**

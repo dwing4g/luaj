@@ -70,7 +70,6 @@ public final class JsePlatform
 		_G.load(new LibOs());
 		_G.load(new LibLuajava());
 		LuaThread.setGlobals(_G);
-		LuaC.install();
 		return _G;
 	}
 

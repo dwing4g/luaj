@@ -1495,7 +1495,7 @@ public class LexState
 		}
 	}
 
-	static class Priority
+	private static final class Priority
 	{
 		final byte left; /* left priority for each binary operator */
 
@@ -1508,15 +1508,15 @@ public class LexState
 		}
 	}
 
-	static Priority[] priority       = { /* ORDER OPR */
-	                                 new Priority(6, 6), new Priority(6, 6), new Priority(7, 7), new Priority(7, 7), new Priority(7, 7), /* `+' `-' `/' `%' */
-	                                 new Priority(10, 9), new Priority(5, 4), /* power and concat (right associative) */
-	                                 new Priority(3, 3), new Priority(3, 3), /* equality and inequality */
-	                                 new Priority(3, 3), new Priority(3, 3), new Priority(3, 3), new Priority(3, 3), /* order */
-	                                 new Priority(2, 2), new Priority(1, 1) /* logical (and/or) */
-	                                 };
+	private static final Priority[] PRIORITY       = { /* ORDER OPR */
+	                                               new Priority(6, 6), new Priority(6, 6), new Priority(7, 7), new Priority(7, 7), new Priority(7, 7), /* `+' `-' `/' `%' */
+	                                               new Priority(10, 9), new Priority(5, 4), /* power and concat (right associative) */
+	                                               new Priority(3, 3), new Priority(3, 3), /* equality and inequality */
+	                                               new Priority(3, 3), new Priority(3, 3), new Priority(3, 3), new Priority(3, 3), /* order */
+	                                               new Priority(2, 2), new Priority(1, 1) /* logical (and/or) */
+	                                               };
 
-	static final int  UNARY_PRIORITY = 8; /* priority for unary operators */
+	private static final int        UNARY_PRIORITY = 8; /* priority for unary operators */
 
 	/*
 	** subexpr -> (simpleexp | unop subexpr) { binop subexpr }
@@ -1538,14 +1538,14 @@ public class LexState
 			simpleexp(v);
 		/* expand while operators have priorities higher than `limit' */
 		op = getbinopr(_t.token);
-		while(op != OPR_NOBINOPR && priority[op].left > limit)
+		while(op != OPR_NOBINOPR && PRIORITY[op].left > limit)
 		{
 			expdesc v2 = new expdesc();
 			int nextop;
 			next();
 			_fs.infix(op, v);
 			/* read sub-expression with higher priority */
-			nextop = subexpr(v2, priority[op].right);
+			nextop = subexpr(v2, PRIORITY[op].right);
 			_fs.posfix(op, v, v2);
 			op = nextop;
 		}

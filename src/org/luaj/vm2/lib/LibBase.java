@@ -4,7 +4,6 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import org.luaj.vm2.LoadState;
 import org.luaj.vm2.Lua;
 import org.luaj.vm2.LuaError;
 import org.luaj.vm2.LuaString;
@@ -12,6 +11,7 @@ import org.luaj.vm2.LuaTable;
 import org.luaj.vm2.LuaThread;
 import org.luaj.vm2.LuaValue;
 import org.luaj.vm2.Varargs;
+import org.luaj.vm2.compiler.LuaC;
 
 /**
  * Subclass of {@link LibFunction} which implements the lua basic library functions.
@@ -404,7 +404,7 @@ public final class LibBase extends LibFunction1
 		{
 			if(is == null)
 			    return varargsOf(NIL, valueOf("not found: " + chunkname));
-			return LoadState.load(is, chunkname, LuaThread.getGlobals());
+			return LuaC.load(is, chunkname, LuaThread.getGlobals());
 		}
 		catch(Exception e)
 		{

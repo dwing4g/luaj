@@ -1,7 +1,6 @@
 package org.luaj.vm2.lib;
 
 import java.lang.ref.WeakReference;
-import org.luaj.vm2.LoadState.LuaCompiler;
 import org.luaj.vm2.Lua;
 import org.luaj.vm2.LuaBoolean;
 import org.luaj.vm2.LuaClosure;

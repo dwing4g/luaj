@@ -2,7 +2,6 @@ package org.luaj.vm2.lib;
 
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
-import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import org.luaj.vm2.LuaError;
 import org.luaj.vm2.LuaValue;
@@ -22,13 +21,16 @@ import org.luaj.vm2.Varargs;
  */
 final class JavaConstructor extends JavaMember
 {
-	private static final Map<Constructor<?>, JavaConstructor> constructors = new ConcurrentHashMap<Constructor<?>, JavaConstructor>();
+	private static final ConcurrentHashMap<Constructor<?>, JavaConstructor> constructors = new ConcurrentHashMap<Constructor<?>, JavaConstructor>();
 
 	static JavaConstructor forConstructor(Constructor<?> c)
 	{
 		JavaConstructor j = constructors.get(c);
 		if(j == null)
-		    constructors.put(c, j = new JavaConstructor(c));
+		{
+			JavaConstructor jj = constructors.putIfAbsent(c, j = new JavaConstructor(c));
+			if(jj != null) j = jj;
+		}
 		return j;
 	}
 
