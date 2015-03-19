@@ -150,7 +150,7 @@ public class LuaC extends Lua
 	int                                   _nCcalls;
 	private HashMap<LuaString, LuaString> _strings;
 
-	public LuaC()
+	protected LuaC()
 	{
 	}
 

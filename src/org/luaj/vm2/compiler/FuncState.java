@@ -44,6 +44,10 @@ public final class FuncState extends LuaC
 	UpValDesc[]                upvalues = new UpValDesc[LUAI_MAXUPVALUES]; /* upvalues */
 	short[]                    actvar   = new short[LUAI_MAXVARS];        /* declared-variable stack */
 
+	FuncState()
+	{
+	}
+
 	// =============================================================
 	// from lcode.h
 	// =============================================================
