@@ -356,7 +356,8 @@ public final class LuaThread extends LuaValue
 		 */
 		void onCall(LuaFunction function)
 		{
-			_functions[_calls++] = function;
+			if(_calls >= 0 && _calls < _functions.length)
+				_functions[_calls++] = function;
 			if(LibDebug.DEBUG_ENABLED)
 			    LibDebug.debugOnCall(running_thread, _calls, function);
 		}
@@ -367,7 +368,8 @@ public final class LuaThread extends LuaValue
 		 */
 		public void onReturn()
 		{
-			_functions[--_calls] = null;
+			if(_calls > 0 && _calls <= _functions.length)
+				_functions[--_calls] = null;
 			if(LibDebug.DEBUG_ENABLED)
 			    LibDebug.debugOnReturn(running_thread, _calls);
 		}
