@@ -19,7 +19,8 @@
 
 	<target name="compile">
 		<mkdir dir="${classes}"/>
-		<javac destdir="${classes}" encoding="utf-8" source="1.6" target="1.6" debug="true" debuglevel="lines,source" fork="true" memoryMaximumSize="512m" includeantruntime="false">
+		<javac destdir="${classes}" encoding="utf-8" source="1.6" target="1.6" debug="true" debuglevel="lines,vars,source" includeantruntime="false">
+			<compilerarg value="-nowarn"/>
 			<src path="${src}/"/>
 		</javac>
 	</target>
